@@ -39,6 +39,10 @@ class TestLoadData:
         for col in expected:
             assert col in raw_df.columns, f"Colonne attendue manquante : {col}"
 
+    def test_diagnosis_values(self, raw_df):
+        unique_vals = set(raw_df["Diagnosis"].dropna().unique())
+        assert unique_vals.issubset({0, 1}), f"Valeurs inattendues dans Diagnosis : {unique_vals}"
+
 
                                                              
                              
