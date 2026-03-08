@@ -2,6 +2,7 @@
 
 import os
 import sys
+import json
 
 import pytest
 import joblib
@@ -41,3 +42,10 @@ def loaded_model():
     scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
     feature_names = joblib.load(os.path.join(MODELS_DIR, "feature_names.pkl"))
     return model, scaler, feature_names
+
+
+@pytest.fixture(scope="session")
+def metrics_data():
+    """Load metrics.json once per session."""
+    with open(os.path.join(MODELS_DIR, "metrics.json")) as f:
+        return json.load(f)
