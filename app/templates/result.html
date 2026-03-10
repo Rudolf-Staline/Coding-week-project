@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Diagnosis Result — AppendixAI{% endblock %}
+
+{% block content %}
+<section class="result-section">
+    <div class="container">
+        <div class="result-hero reveal">
+            <div class="result-badge {{ risk_level }}">
+                {% if risk_level == 'high' %}🔴{% elif risk_level == 'moderate' %}🟡{% else %}🟢{% endif %}
+                {{ risk_label }}
+            </div>
+            <h1 class="result-title">Analysis <span class="gradient-text">Complete</span></h1>
+        </div>
+
+        <div class="result-grid">
+            <div class="result-card tilt-card reveal" id="risk-card">
+                <h3 class="result-card-title">Risk Assessment</h3>
+                <div class="gauge-container">
+                    <svg class="gauge" viewBox="0 0 200 120">
+                        <defs>
+                            <linearGradient id="gauge-low" x1="0%" y1="0%" x2="100%"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#6ee7b7"/></linearGradient>
+                            <linearGradient id="gauge-mid" x1="0%" y1="0%" x2="100%"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#fde68a"/></linearGradient>
+                            <linearGradient id="gauge-high" x1="0%" y1="0%" x2="100%"><stop offset="0%" stop-color="#f87171"/><stop offset="100%" stop-color="#fca5a5"/></linearGradient>
+                        </defs>
+                        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="10" stroke-linecap="round"/>
+                        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="{% if risk_level == 'high' %}url(#gauge-high){% elif risk_level == 'moderate' %}url(#gauge-mid){% else %}url(#gauge-low){% endif %}" stroke-width="10" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2" class="gauge-fill" data-percent="{{ risk_score }}"/>
+                        <line x1="100" y1="100" x2="100" y2="30" stroke="var(--text-300)" stroke-width="2" stroke-linecap="round" class="gauge-needle" transform="rotate(-90, 100, 100)"/>
+                        <circle cx="100" cy="100" r="3.5" fill="var(--text-300)"/>
+                    </svg>
+                    <div class="gauge-value">
+                        <span class="gauge-number" data-count="{{ risk_score }}">0</span><span class="gauge-percent">%</span>
+                    </div>
+                    <p class="gauge-label">Probability of Appendicitis</p>
+                </div>
+            </div>
+
+            <div class="result-card tilt-card reveal" id="confidence-card">
+                <h3 class="result-card-title">Model Confidence</h3>
+                <div class="confidence-display">
+                    <div class="confidence-ring">
+                        <svg viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="5"/>
+                            <circle cx="60" cy="60" r="52" fill="none" stroke="{% if risk_level == 'high' %}var(--danger){% elif risk_level == 'moderate' %}var(--warning){% else %}var(--success){% endif %}" stroke-width="5" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" class="confidence-circle" data-percent="{{ confidence }}" transform="rotate(-90, 60, 60)"/>
+                        </svg>
+                        <span class="confidence-value" data-count="{{ confidence }}">0</span><span class="confidence-unit">%</span>
+                    </div>
+                </div>
+                <div class="prediction-label {{ risk_level }}">
+                    {% if prediction == 1 %}⚠️ Appendicitis Detected{% else %}✅ No Appendicitis Detected{% endif %}
+                </div>
+            </div>
+
+            <div class="result-card result-card-wide reveal" id="recommendation-card">
+                <h3 class="result-card-title">Recommendation</h3>
+                <div class="recommendation {{ risk_level }}">
+                    <div class="recommendation-icon">{% if risk_level == 'high' %}🏥{% elif risk_level == 'moderate' %}🔍{% else %}👁️{% endif %}</div>
+                    <p class="recommendation-text">{{ recommendation }}</p>
+                </div>
+                <div class="disclaimer">⚠️ This is an AI-assisted tool. All clinical decisions should be made by qualified healthcare professionals.</div>
+            </div>
+        </div>
+
+        {% if top_features %}
+        <div class="shap-section reveal">
+            <div class="section-header">
+                <span class="section-label">Explainability</span>
+                <h2 class="section-title">Feature <span class="gradient-text">Impact</span></h2>
+                <p class="section-subtitle">SHAP values showing which factors influenced this prediction</p>
+            </div>
+            <div class="shap-grid">
+                <div class="result-card" id="feature-bars-card">
+                    <h3 class="result-card-title">Contributing Factors</h3>
+                    <div class="feature-bars">
+                        {% for feat in top_features %}
+                        <div class="feature-bar-item">
+                            <div class="feature-bar-label">
+                                <span class="feature-name">{{ feat.name }}</span>
+                                <span class="feature-impact {% if feat.value > 0 %}positive{% else %}negative{% endif %}">{{ "+" if feat.value > 0 }}{{ "%.3f"|format(feat.value) }}</span>
+                            </div>
+                            <div class="feature-bar-track">
+                                <div class="feature-bar-fill {% if feat.value > 0 %}positive{% else %}negative{% endif %}" data-width="{{ (feat.abs_value / top_features[0].abs_value * 100)|round(0) }}" style="width:0%"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if shap_plot %}
+                <div class="result-card">
+                    <h3 class="result-card-title">SHAP Waterfall</h3>
+                    <div class="shap-plot-container">
+                        <img src="{{ url_for('static', filename='images/' + shap_plot) }}" alt="SHAP Waterfall" class="shap-image">
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="result-card result-card-wide reveal" id="what-if-card">
+                    <h3 class="result-card-title">Live "What-If" Analysis</h3>
+                    <p class="card-description">Experiment with clinical values to see real-time impact on AI risk assessment.</p>
+                    <div class="what-if-grid" id="what-if-sliders">
+                        <div class="slider-group">
+                            <div class="slider-header"><label>WBC Count</label><span class="slider-val" id="val-WBC_Count" data-unit=" 10³/µL">{{ "%.1f"|format(input_features.get('WBC_Count', 10.0)) }}</span></div>
+                            <input type="range" class="what-if-slider" data-feature="WBC_Count" min="0" max="30" step="0.5" value="{{ input_features.get('WBC_Count', 10.0) }}">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-header"><label>CRP</label><span class="slider-val" id="val-CRP" data-unit=" mg/L">{{ "%.1f"|format(input_features.get('CRP', 5.0)) }}</span></div>
+                            <input type="range" class="what-if-slider" data-feature="CRP" min="0" max="300" step="1" value="{{ input_features.get('CRP', 5.0) }}">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-header"><label>Neutrophils</label><span class="slider-val" id="val-Neutrophil_Percentage" data-unit="%">{{ "%.1f"|format(input_features.get('Neutrophil_Percentage', 60.0)) }}</span></div>
+                            <input type="range" class="what-if-slider" data-feature="Neutrophil_Percentage" min="0" max="100" step="1" value="{{ input_features.get('Neutrophil_Percentage', 60.0) }}">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-header"><label>Body Temp</label><span class="slider-val" id="val-Body_Temperature" data-unit="°C">{{ "%.1f"|format(input_features.get('Body_Temperature', 37.0)) }}</span></div>
+                            <input type="range" class="what-if-slider" data-feature="Body_Temperature" min="35" max="42" step="0.1" value="{{ input_features.get('Body_Temperature', 37.0) }}">
+                        </div>
+                    </div>
+                    <!-- Hidden input features state for JS -->
+                    <script id="initial-features" type="application/json">{{ input_features | tojson }}</script>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="result-actions reveal">
+            <a href="/" class="btn btn-primary btn-lg">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                New Assessment
+            </a>
+            <a href="/about" class="btn btn-ghost btn-lg">Model Details</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

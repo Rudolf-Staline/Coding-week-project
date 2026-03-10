@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}AppendixAI — Pediatric Appendicitis Diagnosis{% endblock %}
+
+{% block content %}
+<section class="hero" id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content reveal">
+        <div class="hero-badge">
+            <span class="badge-dot"></span>
+            AI-Powered Clinical Decision Support
+        </div>
+        <h1 class="hero-title">
+            Pediatric Appendicitis<br>
+            <span class="gradient-text" id="typed-text" data-text="Intelligent Diagnosis">Intelligent Diagnosis</span>
+        </h1>
+        <p class="hero-subtitle">
+            Explainable machine learning model assisting pediatricians
+            with transparent, data-driven appendicitis risk assessment.
+        </p>
+        <div class="hero-metrics">
+            <div class="metric-card tilt-card reveal">
+                <div><span class="metric-value" data-count="{{ (metrics.models['CatBoost'].roc_auc * 100)|round(1) }}">0</span><span class="metric-unit">%</span></div>
+                <div class="metric-label">ROC-AUC</div>
+                <div class="metric-trend">↑ Top Model</div>
+            </div>
+            <div class="metric-card tilt-card reveal">
+                <div><span class="metric-value" data-count="{{ (metrics.models['CatBoost'].accuracy * 100)|round(1) }}">0</span><span class="metric-unit">%</span></div>
+                <div class="metric-label">Accuracy</div>
+                <div class="metric-trend">↑ 95%+ target</div>
+            </div>
+            <div class="metric-card tilt-card reveal">
+                <div><span class="metric-value" data-count="{{ (metrics.models['CatBoost'].recall * 100)|round(1) }}">0</span><span class="metric-unit">%</span></div>
+                <div class="metric-label">Recall</div>
+                <div class="metric-trend">↑ High sensitivity</div>
+            </div>
+            <div class="metric-card tilt-card reveal">
+                <div><span class="metric-value" data-count="782">0</span></div>
+                <div class="metric-label">Patients</div>
+                <div class="metric-trend">Regensburg Dataset</div>
+            </div>
+        </div>
+        <div class="hero-cta-group">
+            <a href="#form-section" class="btn btn-primary btn-lg">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Start Diagnosis
+            </a>
+            <a href="/about" class="btn btn-ghost btn-lg">
+                How It Works
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="features-section" id="features">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-label">Platform</span>
+            <h2 class="section-title">Why <span class="gradient-text">AppendixAI</span></h2>
+            <p class="section-subtitle">Built for clinical precision and complete AI transparency</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card tilt-card reveal">
+                <div class="feature-icon-wrap">🧠</div>
+                <h3>Explainable AI</h3>
+                <p>SHAP-powered explanations reveal which clinical factors drive each individual prediction.</p>
+            </div>
+            <div class="feature-card tilt-card reveal">
+                <div class="feature-icon-wrap">⚡</div>
+                <h3>Instant Analysis</h3>
+                <p>Real-time risk scoring from a CatBoost model trained on 782 pediatric clinical cases.</p>
+            </div>
+            <div class="feature-card tilt-card reveal">
+                <div class="feature-icon-wrap">🔬</div>
+                <h3>Evidence-Based</h3>
+                <p>Trained on the Regensburg dataset with rigorous 5-fold cross-validation methodology.</p>
+            </div>
+            <div class="feature-card tilt-card reveal">
+                <div class="feature-icon-wrap">🛡️</div>
+                <h3>Clinical Safety</h3>
+                <p>97.9% recall ensures minimal missed cases in this critical clinical context.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="form-section" id="form-section">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-label">Assessment</span>
+            <h2 class="section-title">Patient <span class="gradient-text">Evaluation</span></h2>
+            <p class="section-subtitle">Enter clinical data for AI-assisted appendicitis risk evaluation</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-error reveal"><span>⚠️</span> {{ error }}</div>
+        {% endif %}
+
+        <form action="/predict" method="POST" class="diagnosis-form" id="diagnosis-form" novalidate>
+            {% set sections = form_fields.keys()|list %}
+            <div class="wizard-progress reveal">
+                {% for key in sections %}
+                <div class="wizard-step">
+                    <div class="step-indicator" data-step="{{ loop.index0 }}">
+                        {{ loop.index }}
+                        <span class="step-label">{{ form_fields[key].title|truncate(16, True, '…') }}</span>
+                    </div>
+                </div>
+                {% if not loop.last %}
+                <div class="step-connector"><div class="connector-fill"></div></div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <div class="wizard-panels">
+                {% for section_key in sections %}
+                <div class="wizard-panel" id="panel-{{ loop.index0 }}">
+                    <div class="form-section-card reveal">
+                        <div class="form-section-header">
+                            <span class="form-section-icon">{{ form_fields[section_key].icon }}</span>
+                            <h3 class="form-section-title">{{ form_fields[section_key].title }}</h3>
+                        </div>
+                        <div class="form-panel-grid">
+                            {% for field in form_fields[section_key].fields %}
+                            <div class="form-group" id="group-{{ field.name }}">
+                                <label for="{{ field.name }}" class="form-label">{{ field.label }}</label>
+                                {% if field.type == 'select' %}
+                                <div class="select-wrapper">
+                                    <select name="{{ field.name }}" id="{{ field.name }}" class="form-select">
+                                        <option value="">— Select —</option>
+                                        {% for val, label in field.options %}
+                                        <option value="{{ val }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% else %}
+                                <input type="{{ field.type }}" name="{{ field.name }}" id="{{ field.name }}" class="form-input" step="{{ field.step }}" min="{{ field.min }}" max="{{ field.max }}" placeholder="{{ field.placeholder }}">
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="wizard-nav">
+                        {% if not loop.first %}
+                        <button type="button" class="btn btn-ghost" data-wizard-prev>
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Previous
+                        </button>
+                        {% endif %}
+                        {% if not loop.last %}
+                        <button type="button" class="btn btn-primary" data-wizard-next>
+                            Next Step
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                        {% else %}
+                        <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+                            <span class="btn-content">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                Analyze Patient
+                            </span>
+                            <span class="btn-loading" style="display:none"><span class="spinner"></span>Processing…</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

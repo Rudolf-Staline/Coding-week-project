@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Model Explainability — AppendixAI{% endblock %}
+
+{% block content %}
+<section class="about-section">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-label">Transparency</span>
+            <h1 class="section-title">Model <span class="gradient-text">Explainability</span></h1>
+            <p class="section-subtitle">Understanding how our AI makes decisions — because trust requires transparency</p>
+        </div>
+
+        <div class="result-card tilt-card reveal">
+            <h3 class="result-card-title">Performance Comparison</h3>
+            <div class="table-responsive">
+                <table class="comparison-table">
+                    <thead><tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>ROC-AUC</th></tr></thead>
+                    <tbody>
+                        {% for name, m in metrics.models.items() %}
+                        <tr class="{% if name == metrics.best_model %}best-row{% endif %}">
+                            <td><span class="model-name">{{ name }}</span>{% if name == metrics.best_model %}<span class="best-badge">★ Best</span>{% endif %}</td>
+                            <td>{{ "%.1f"|format(m.accuracy * 100) }}%</td>
+                            <td>{{ "%.1f"|format(m.precision * 100) }}%</td>
+                            <td>{{ "%.1f"|format(m.recall * 100) }}%</td>
+                            <td>{{ "%.1f"|format(m.f1_score * 100) }}%</td>
+                            <td><strong>{{ "%.1f"|format(m.roc_auc * 100) }}%</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="shap-explanations">
+            <div class="result-card reveal">
+                <h3 class="result-card-title">Global Feature Importance</h3>
+                <p class="card-description">Mean absolute SHAP values — larger bars indicate stronger influence on the model output.</p>
+                <div class="shap-plot-container"><img src="{{ url_for('static', filename='images/shap_summary_bar.png') }}" alt="SHAP Summary" class="shap-image"></div>
+            </div>
+            <div class="result-card reveal">
+                <h3 class="result-card-title">Feature Impact Distribution</h3>
+                <p class="card-description">Each dot is a patient. Red = high feature value, Blue = low value. X-axis = impact on prediction.</p>
+                <div class="shap-plot-container"><img src="{{ url_for('static', filename='images/shap_beeswarm.png') }}" alt="SHAP Beeswarm" class="shap-image"></div>
+            </div>
+            <div class="result-card-row">
+                <div class="result-card tilt-card reveal">
+                    <h3 class="result-card-title">Confusion Matrix</h3>
+                    <div class="shap-plot-container"><img src="{{ url_for('static', filename='images/confusion_matrix.png') }}" alt="Confusion Matrix" class="shap-image"></div>
+                </div>
+                <div class="result-card tilt-card reveal">
+                    <h3 class="result-card-title">ROC Curve</h3>
+                    <p class="card-description">AUC of {{ "%.1f"|format(metrics.models['CatBoost'].roc_auc * 100) }}% indicates excellent discrimination.</p>
+                    <div class="shap-plot-container"><img src="{{ url_for('static', filename='images/roc_curve.png') }}" alt="ROC Curve" class="shap-image"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-card reveal">
+            <h3 class="result-card-title">Dataset</h3>
+            <div class="info-grid">
+                <div class="info-item"><span class="info-icon">📊</span><div><strong>Source</strong><p>Regensburg Pediatric Appendicitis (UCI ML Repository)</p></div></div>
+                <div class="info-item"><span class="info-icon">👶</span><div><strong>782 Patients</strong><p>~59% appendicitis, ~41% no appendicitis</p></div></div>
+                <div class="info-item"><span class="info-icon">🔢</span><div><strong>53 Features</strong><p>Demographics, symptoms, labs, imaging</p></div></div>
+                <div class="info-item"><span class="info-icon">🧹</span><div><strong>Preprocessed</strong><p>Missing values imputed, outliers capped, 93.4% memory reduction</p></div></div>
+            </div>
+        </div>
+
+        <div class="result-card reveal">
+            <h3 class="result-card-title">How SHAP Works</h3>
+            <div class="steps-grid">
+                <div class="step-item"><div class="step-number">1</div><h4>Base Value</h4><p>Start from the average prediction</p></div>
+                <div class="step-item"><div class="step-number">2</div><h4>Contributions</h4><p>Each feature pushes up or down</p></div>
+                <div class="step-item"><div class="step-number">3</div><h4>Final Score</h4><p>Sum of all contributions = prediction</p></div>
+                <div class="step-item"><div class="step-number">4</div><h4>Transparency</h4><p>Clinicians see exactly why</p></div>
+            </div>
+        </div>
+
+        <div class="result-actions reveal">
+            <a href="/" class="btn btn-primary btn-lg">Start Diagnosis</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
