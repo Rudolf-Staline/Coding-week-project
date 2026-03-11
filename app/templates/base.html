@@ -50,7 +50,7 @@
             </a>
 
             <!-- Liens de navigation principaux -->
-            <nav class="nav-links">
+            <nav class="nav-links" aria-label="Navigation principale">
                 <a href="{{ url_for('home') }}">Accueil</a>
                 <!-- Les liens Diagnostic et Historique ne sont visibles que pour les utilisateurs connectés -->
                 {% if current_user.is_authenticated %}
