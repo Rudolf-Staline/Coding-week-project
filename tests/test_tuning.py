@@ -64,6 +64,10 @@ class TestBuildModel:
             m = build_model(name, params)
             assert hasattr(m, "predict_proba"), f"{name} n'a pas predict_proba"
 
+    def test_unknown_model_raises(self):
+        with pytest.raises((ValueError, KeyError)):
+            build_model("ModeleInconnu", {})
+
 
                                                              
                                
