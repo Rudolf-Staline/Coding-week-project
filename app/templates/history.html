@@ -45,6 +45,7 @@
                 <thead>
                     <tr>
                         <th>#</th>
+                        <th>Patient</th>
                         <th>Date &amp; Time</th>
                         <th>Age</th>
                         <th>Sex</th>
@@ -57,6 +58,13 @@
                     {% for r in records %}
                     <tr data-result="{{ 'positive' if r.prediction == 1 else 'negative' }}">
                         <td class="row-id">{{ loop.index }}</td>
+                        <td>
+                            {% if r.patient_first_name or r.patient_last_name %}
+                            <span style="font-weight:600;color:var(--slate-700)">{{ r.patient_first_name }} {{ r.patient_last_name }}</span>
+                            {% else %}
+                            <span style="color:var(--slate-400);font-style:italic">—</span>
+                            {% endif %}
+                        </td>
                         <td>{{ r.timestamp }}</td>
                         <td>{{ r.age }}</td>
                         <td><span class="sex-pill {{ 'male' if r.sex == 'male' else 'female' }}">{{ r.sex|capitalize }}</span></td>

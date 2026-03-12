@@ -116,6 +116,10 @@ def init_db():
     columns = [col[1] for col in cursor.fetchall()]
     if "user_id" not in columns:
         conn.execute("ALTER TABLE history ADD COLUMN user_id INTEGER DEFAULT 0")
+    if "patient_first_name" not in columns:
+        conn.execute("ALTER TABLE history ADD COLUMN patient_first_name TEXT DEFAULT ''")
+    if "patient_last_name" not in columns:
+        conn.execute("ALTER TABLE history ADD COLUMN patient_last_name TEXT DEFAULT ''")
     conn.commit()
     conn.close()
 
@@ -220,11 +224,64 @@ def compute_shap_values(X_scaled):
         explainer = shap.KernelExplainer(model.predict_proba, bg)
     sv = explainer.shap_values(X_scaled)
     if isinstance(sv, list):
-        sv = sv[1]
+        sv = sv[1]  # binary: take positive class
+    elif hasattr(sv, 'ndim') and sv.ndim == 3:
+        sv = sv[:, :, 1]  # (n_samples, n_features, n_classes) → class 1
     vals = sv[0]
     pairs = list(zip(feature_names, X_scaled[0], vals))
     pairs.sort(key=lambda x: abs(x[2]), reverse=True)
-    return [{"feature": f, "value": round(float(v), 4), "shap": round(float(s), 4)}
+
+    # French translation of feature names for display
+    _fr = {
+        "Age": "Âge",
+        "BMI": "IMC",
+        "Height": "Taille",
+        "Weight": "Poids",
+        "Sex_male": "Sexe (masculin)",
+        "Body_Temperature": "Température corporelle",
+        "WBC_Count": "Globules blancs (GB)",
+        "Neutrophil_Percentage": "Pourcentage neutrophiles",
+        "CRP": "Protéine C-réactive",
+        "RBC_Count": "Globules rouges (GR)",
+        "Hemoglobin": "Hémoglobine",
+        "RDW": "IDR (Indice distrib. GR)",
+        "Thrombocyte_Count": "Plaquettes",
+        "Appendix_Diameter": "Diamètre appendice",
+        "Length_of_Stay": "Durée de séjour",
+        "Alvarado_Score": "Score d'Alvarado",
+        "Paedriatic_Appendicitis_Score": "Score péd. appendicite",
+        "WBC_CRP_Ratio": "Ratio GB / CRP",
+        "Neutrophil_WBC_Interaction": "Interaction neutro. × GB",
+        "Migratory_Pain_yes": "Douleur migratoire",
+        "Lower_Right_Abd_Pain_yes": "Douleur fosse iliaque droite",
+        "Contralateral_Rebound_Tenderness_yes": "Rebond controlatéral",
+        "Coughing_Pain_yes": "Douleur à la toux",
+        "Nausea_yes": "Nausées",
+        "Loss_of_Appetite_yes": "Perte d'appétit",
+        "Neutrophilia_yes": "Neutrophilie",
+        "Dysuria_yes": "Dysurie",
+        "Psoas_Sign_yes": "Signe du psoas",
+        "Ipsilateral_Rebound_Tenderness_yes": "Rebond ipsilatéral",
+        "US_Performed_yes": "Échographie réalisée",
+        "Appendix_on_US_yes": "Appendice visible (écho)",
+        "Free_Fluids_yes": "Liquide libre (écho)",
+        "Peritonitis_no": "Péritonite absente",
+        "Peritonitis_local": "Péritonite locale",
+        "Stool_normal": "Selles normales",
+        "Stool_diarrhea": "Diarrhée",
+        "Stool_constipation, diarrhea": "Constipation",
+        "Ketones_in_Urine_no": "Cétones urinaires (non)",
+        "Ketones_in_Urine_++": "Cétones urinaires (++)",
+        "Ketones_in_Urine_+++": "Cétones urinaires (+++)",
+        "RBC_in_Urine_no": "GR urinaires (non)",
+        "RBC_in_Urine_++": "GR urinaires (++)",
+        "RBC_in_Urine_+++": "GR urinaires (+++)",
+        "WBC_in_Urine_no": "GB urinaires (non)",
+        "WBC_in_Urine_++": "GB urinaires (++)",
+        "WBC_in_Urine_+++": "GB urinaires (+++)",
+    }
+
+    return [{"feature": _fr.get(f, f), "value": round(float(v), 4), "shap": round(float(s), 4)}
             for f, v, s in pairs[:10]]
 
 
@@ -350,7 +407,7 @@ def predict():
         import json
         conn = get_db()
         conn.execute(
-            "INSERT INTO history (user_id, timestamp, age, sex, prediction, confidence, probability, form_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO history (user_id, timestamp, age, sex, prediction, confidence, probability, form_data, patient_first_name, patient_last_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (current_user.id,
              datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
              form_data.get("Age", ""),
@@ -358,7 +415,9 @@ def predict():
              prediction,
              confidence,
              probability,
-             json.dumps(form_data))
+             json.dumps(form_data),
+             form_data.get("patient_first_name", "").strip(),
+             form_data.get("patient_last_name", "").strip())
         )
         conn.commit()
         conn.close()
@@ -368,7 +427,8 @@ def predict():
                                probability=probability,
                                confidence=confidence,
                                shap_values=shap_values,
-                               form_data=form_data)
+                               form_data=form_data,
+                               patient_name=f"{form_data.get('patient_first_name','').strip()} {form_data.get('patient_last_name','').strip()}".strip())
     except Exception as e:
         logger.error("Prediction error: %s", e, exc_info=True)
         flash(f"Error: {e}", "error")
@@ -391,6 +451,8 @@ def history():
             "sex": r["sex"],
             "prediction": r["prediction"],
             "confidence": r["confidence"],
+            "patient_first_name": r["patient_first_name"] if r["patient_first_name"] else "",
+            "patient_last_name": r["patient_last_name"] if r["patient_last_name"] else "",
         })
     return render_template("history.html", records=records)
 

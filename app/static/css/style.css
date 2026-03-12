@@ -23,7 +23,10 @@
   --orange-50: #fff7ed; --orange-100: #ffedd5; --orange-400: #fb923c;
   --orange-500: #f97316; --orange-600: #ea580c;
   --red-50:  #fef2f2;  --red-100: #fee2e2;  --red-500: #ef4444;
-  --red-600: #dc2626;  --rose-600: #e11d48;
+  --red-600: #dc2626;
+  --rose-50: #fff1f2; --rose-100: #ffe4e6; --rose-500: #f43f5e;
+  --rose-600: #e11d48; --rose-700: #be123c; --rose-800: #9f1239;
+  --violet-50: #f5f3ff; --violet-100: #ede9fe;
   --slate-50:  #f8fafc;  --slate-100: #f1f5f9;  --slate-200: #e2e8f0;
   --slate-300: #cbd5e1;  --slate-400: #94a3b8;  --slate-500: #64748b;
   --slate-600: #475569;  --slate-700: #334155;  --slate-800: #1e293b;
@@ -409,6 +412,63 @@ input, select, textarea { font-family: inherit; }
   background: var(--emerald-500);
   animation: pulse-dot 2s ease-in-out infinite;
 }
+
+/* ── Hero Image Container ───────────────────────────────────────── */
+.hero-image-container {
+  position: relative;
+  width: 100%; max-width: 420px;
+  border-radius: var(--radius-3xl);
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(15,23,42,0.15), 0 0 0 1px rgba(255,255,255,0.3) inset;
+}
+/* Variant for tall dark anatomical illustration */
+.hero-image-container.anatomy-hero {
+  max-width: 380px;
+  height: 560px;
+  background: #060a10;
+  border-radius: var(--radius-3xl);
+  box-shadow:
+    0 40px 90px rgba(0,0,0,0.45),
+    0 0 0 1px rgba(255,255,255,0.07) inset,
+    0 0 60px rgba(46,134,171,0.15);
+}
+.hero-image {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: brightness(1.02) contrast(1.05);
+}
+.anatomy-hero .hero-image {
+  object-position: center 22%;
+  filter: brightness(1.08) contrast(1.06) saturate(1.15);
+}
+.hero-image-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(46,134,171,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+.anatomy-hero .hero-image-overlay {
+  background:
+    linear-gradient(to right, rgba(248,250,252,0.18) 0%, transparent 35%),
+    linear-gradient(to top, rgba(6,10,16,0.55) 0%, transparent 45%),
+    linear-gradient(to bottom, rgba(6,10,16,0.3) 0%, transparent 20%);
+}
+.hero-float-badge {
+  position: absolute;
+  display: flex; align-items: center; gap: 0.625rem;
+  padding: 0.625rem 1rem;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(226,232,240,0.6);
+  box-shadow: 0 8px 24px rgba(15,23,42,0.1);
+  animation: float 6s ease-in-out infinite;
+}
+.hero-float-badge.top-badge { top: 1rem; right: -1rem; animation-delay: 0s; }
+.hero-float-badge.bottom-badge { bottom: 1.5rem; left: -1rem; animation-delay: 3s; }
+.hero-float-badge .hfb-icon { font-size: 1.25rem; }
+.hero-float-badge .hfb-value { font-size: 0.9rem; font-weight: 700; color: var(--slate-800); }
+.hero-float-badge .hfb-label { font-size: 0.7rem; color: var(--slate-500); }
 
 /* ── Stats Bar ──────────────────────────────────────────────────── */
 .stats-bar {
@@ -870,6 +930,7 @@ input, select, textarea { font-family: inherit; }
   background: linear-gradient(180deg, #fff 0%, var(--slate-50) 100%);
   min-height: 100vh;
 }
+.result-container { max-width: 1100px; margin: 0 auto; }
 
 /* Main result card */
 .result-main-card {
@@ -907,9 +968,9 @@ input, select, textarea { font-family: inherit; }
 /* SVG Probability Ring */
 .ring-container { position: relative; width: 14rem; height: 14rem; flex-shrink: 0; }
 .ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.ring-bg { fill: none; stroke: var(--slate-100); stroke-width: 16; }
+.ring-bg { fill: none; stroke: var(--slate-100); stroke-width: 14; }
 .ring-progress {
-  fill: none; stroke: url(#ringGradient); stroke-width: 16;
+  fill: none; stroke: url(#ringGradient); stroke-width: 14;
   stroke-linecap: round;
   animation: ring-fill 1.5s ease-out 0.3s both;
 }
@@ -918,11 +979,12 @@ input, select, textarea { font-family: inherit; }
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
 }
-.ring-pct { font-size: 2.75rem; font-weight: 800; color: var(--slate-800); }
-.ring-label { font-size: 0.875rem; color: var(--slate-500); font-weight: 500; margin-top: 0.125rem; }
+.ring-pct { font-size: 2.5rem; font-weight: 800; color: var(--slate-800); letter-spacing: -0.02em; }
+.ring-pct-sign { font-size: 1.25rem; font-weight: 600; color: var(--slate-400); margin-left: 0.125rem; }
+.ring-label { font-size: 0.8rem; color: var(--slate-400); font-weight: 500; margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
 .ring-glow {
   position: absolute; inset: 0; border-radius: 50%;
-  opacity: 0.15; filter: blur(24px);
+  opacity: 0.1; filter: blur(28px);
   animation: pulse-dot 3s ease-in-out infinite;
 }
 
@@ -966,6 +1028,11 @@ input, select, textarea { font-family: inherit; }
 .result-details .result-desc {
   font-size: 1.05rem; color: var(--slate-600); line-height: 1.7;
 }
+.result-patient-name {
+  font-size: 0.95rem; font-weight: 600; letter-spacing: 0.03em;
+  color: rgba(255,255,255,0.75); margin: -0.25rem 0 0.75rem;
+  text-transform: uppercase;
+}
 .confidence-inline {
   display: inline-flex; align-items: center; gap: 0.5rem;
   padding: 0.5rem 1rem; border-radius: var(--radius-xl);
@@ -998,9 +1065,67 @@ input, select, textarea { font-family: inherit; }
 .info-card-icon.amber { background: linear-gradient(135deg, var(--amber-500), var(--orange-500)); }
 .info-card-icon.emerald { background: linear-gradient(135deg, var(--emerald-500), var(--green-500)); }
 .info-card-icon.violet { background: linear-gradient(135deg, var(--violet-500), var(--purple-500)); }
+.info-card-icon.orange { background: linear-gradient(135deg, var(--orange-500), var(--amber-500)); }
 .info-card-title { font-size: 0.8rem; color: var(--slate-500); margin-bottom: 0.125rem; }
 .info-card-value { font-size: 1.05rem; font-weight: 700; color: var(--slate-800); }
 .info-card-desc { font-size: 0.7rem; color: var(--slate-400); margin-top: 0.25rem; }
+
+/* ── Anatomy Reference Card ─────────────────────────────────────── */
+.anatomy-card {
+  max-width: 1024px; margin: 0 auto 2rem;
+  border-radius: var(--radius-3xl);
+  background: #fff;
+  border: 1px solid rgba(226,232,240,0.5);
+  box-shadow: 0 8px 24px rgba(15,23,42,0.05);
+  overflow: hidden;
+}
+.anatomy-card-inner {
+  display: grid; grid-template-columns: 1fr 280px;
+  align-items: center; gap: 2rem;
+}
+.anatomy-text { padding: 2rem 0 2rem 2.5rem; }
+.anatomy-badge {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.375rem 0.875rem; border-radius: 9999px;
+  background: linear-gradient(135deg, #eef5f8, #e4f0f5);
+  border: 1px solid #c8dfe8;
+  font-size: 0.8rem; font-weight: 600; color: #2e86ab;
+  margin-bottom: 1rem;
+}
+.anatomy-text h3 {
+  font-size: 1.125rem; font-weight: 700; color: var(--slate-800);
+  margin-bottom: 0.75rem;
+}
+.anatomy-text p {
+  font-size: 0.9rem; color: var(--slate-600); line-height: 1.7;
+  margin-bottom: 1.25rem;
+}
+.anatomy-text p strong { color: var(--slate-700); }
+.anatomy-facts { display: flex; flex-direction: column; gap: 0.625rem; }
+.anatomy-fact {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-xl);
+  background: var(--slate-50);
+  border: 1px solid var(--slate-100);
+}
+.anatomy-fact .af-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.125rem; }
+.anatomy-fact .af-title { font-size: 0.8rem; font-weight: 600; color: var(--slate-700); }
+.anatomy-fact .af-desc { font-size: 0.75rem; color: var(--slate-500); margin-top: 0.125rem; }
+.anatomy-illustration {
+  padding: 1.5rem 1.5rem 1.5rem 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.anatomy-illustration img {
+  width: 100%; max-width: 260px; height: auto;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.06));
+}
+@media (max-width: 768px) {
+  .anatomy-card-inner { grid-template-columns: 1fr; }
+  .anatomy-text { padding: 1.5rem; }
+  .anatomy-illustration { padding: 0 1.5rem 1.5rem; justify-content: center; }
+  .anatomy-illustration img { max-width: 200px; }
+}
 
 /* SHAP visualization card */
 .shap-card {
@@ -1018,7 +1143,7 @@ input, select, textarea { font-family: inherit; }
 .shap-header-left { display: flex; align-items: center; gap: 0.75rem; }
 .shap-header-icon {
   width: 2.5rem; height: 2.5rem; border-radius: var(--radius-xl);
-  background: linear-gradient(135deg, var(--cyan-500), var(--teal-500));
+  background: linear-gradient(135deg, #2e86ab, #1a6b8a);
   display: flex; align-items: center; justify-content: center;
   color: #fff; font-size: 1.1rem;
 }
@@ -1027,32 +1152,43 @@ input, select, textarea { font-family: inherit; }
 .shap-legend { display: flex; gap: 1.5rem; }
 .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--slate-600); font-weight: 500; }
 .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
-.legend-dot.positive { background: linear-gradient(135deg, var(--cyan-400), var(--teal-500)); }
-.legend-dot.negative { background: linear-gradient(135deg, var(--orange-400), var(--amber-500)); }
+.legend-dot.positive { background: linear-gradient(135deg, #2e86ab, #3d9ec0); }
+.legend-dot.negative { background: linear-gradient(135deg, #8b5c8a, #6b4c6a); }
 
 /* SHAP waterfall bars */
-.shap-rows { display: flex; flex-direction: column; gap: 0.625rem; }
+.shap-rows { display: flex; flex-direction: column; gap: 0.375rem; }
 .shap-row {
-  display: grid; grid-template-columns: 160px 1fr 80px; gap: 0.75rem;
+  display: grid; grid-template-columns: 220px 1fr 90px; gap: 1rem;
   align-items: center;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius);
+  transition: background 0.2s;
 }
-.shap-feature { font-size: 0.85rem; font-weight: 500; color: var(--slate-700); text-align: right; }
+.shap-row:hover { background: var(--slate-50); }
+.shap-feature {
+  font-size: 0.8rem; font-weight: 500; color: var(--slate-600);
+  text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .shap-track {
-  height: 2rem; background: var(--slate-50); border-radius: var(--radius);
+  height: 0.875rem; background: var(--slate-50);
+  border-radius: 9999px;
   overflow: hidden; position: relative;
+  border: 1px solid var(--slate-100);
 }
 .shap-fill {
-  height: 100%; border-radius: var(--radius);
-  transition: width 0.8s ease;
+  height: 100%; border-radius: 9999px;
+  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
   width: 0;
+  position: relative;
 }
-.shap-fill.positive { background: linear-gradient(90deg, var(--cyan-400), var(--teal-500)); }
-.shap-fill.negative { background: linear-gradient(90deg, var(--orange-400), var(--amber-500)); }
+.shap-fill.positive { background: linear-gradient(90deg, #b8d8e8, #2e86ab, #1a6b8a); }
+.shap-fill.negative { background: linear-gradient(90deg, #d4b3d4, #8b5c8a, #6b4c6a); }
 .shap-val {
-  font-size: 0.8rem; font-weight: 700; text-align: right;
+  font-size: 0.78rem; font-weight: 600; text-align: right;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
 }
-.shap-val.positive { color: var(--cyan-600); }
-.shap-val.negative { color: var(--orange-600); }
+.shap-val.positive { color: #1a6b8a; }
+.shap-val.negative { color: #6b4c6a; }
 
 /* SHAP feature cards */
 .shap-features-grid {
@@ -1065,12 +1201,12 @@ input, select, textarea { font-family: inherit; }
   overflow: hidden;
 }
 .shap-feature-col.positive-col {
-  background: linear-gradient(135deg, var(--cyan-50), var(--teal-50), var(--emerald-50));
-  border: 1px solid var(--cyan-100);
+  background: linear-gradient(135deg, #eef5f8, #e4f0f5);
+  border: 1px solid #c8dfe8;
 }
 .shap-feature-col.negative-col {
-  background: linear-gradient(135deg, var(--orange-50), var(--amber-50));
-  border: 1px solid var(--orange-100);
+  background: linear-gradient(135deg, #f3edf3, #ede4ed);
+  border: 1px solid #d8c8d8;
 }
 .shap-col-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
 .shap-col-icon {
@@ -1078,29 +1214,29 @@ input, select, textarea { font-family: inherit; }
   display: flex; align-items: center; justify-content: center;
   color: #fff; font-size: 1rem;
 }
-.shap-col-icon.pos { background: linear-gradient(135deg, var(--cyan-500), var(--teal-500)); box-shadow: 0 4px 12px rgba(6,182,212,0.2); }
-.shap-col-icon.neg { background: linear-gradient(135deg, var(--orange-400), var(--amber-500)); box-shadow: 0 4px 12px rgba(249,115,22,0.2); }
+.shap-col-icon.pos { background: linear-gradient(135deg, #2e86ab, #1a6b8a); box-shadow: 0 4px 12px rgba(46,134,171,0.2); }
+.shap-col-icon.neg { background: linear-gradient(135deg, #8b5c8a, #6b4c6a); box-shadow: 0 4px 12px rgba(139,92,138,0.2); }
 .shap-col-title { font-weight: 700; font-size: 0.95rem; }
-.shap-col-title.pos { color: var(--cyan-800); }
-.shap-col-title.neg { color: var(--orange-800); }
+.shap-col-title.pos { color: #1a5a73; }
+.shap-col-title.neg { color: #5a3d5a; }
 .shap-col-sub { font-size: 0.75rem; }
-.shap-col-sub.pos { color: var(--cyan-600); }
-.shap-col-sub.neg { color: var(--orange-600); }
+.shap-col-sub.pos { color: #2e86ab; }
+.shap-col-sub.neg { color: #8b5c8a; }
 .shap-feature-item {
   padding: 1rem; border-radius: var(--radius-2xl);
   background: #fff; margin-bottom: 0.75rem;
   transition: all 0.3s;
 }
-.shap-feature-item.pos-item { border: 1px solid var(--cyan-100); }
-.shap-feature-item.neg-item { border: 1px solid var(--orange-100); }
+.shap-feature-item.pos-item { border: 1px solid #c8dfe8; }
+.shap-feature-item.neg-item { border: 1px solid #d8c8d8; }
 .shap-feature-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 .shap-feature-item-inner { display: flex; align-items: center; justify-content: space-between; }
 .shap-feature-item-left { display: flex; align-items: center; gap: 0.75rem; }
 .shap-feature-bar {
-  width: 6px; height: 2.5rem; border-radius: 9999px;
+  width: 5px; height: 2.5rem; border-radius: 9999px;
 }
-.shap-feature-bar.pos { background: linear-gradient(180deg, var(--cyan-400), var(--teal-500)); }
-.shap-feature-bar.neg { background: linear-gradient(180deg, var(--orange-400), var(--amber-500)); }
+.shap-feature-bar.pos { background: linear-gradient(180deg, #3d9ec0, #1a6b8a); }
+.shap-feature-bar.neg { background: linear-gradient(180deg, #a075a0, #6b4c6a); }
 .shap-feature-name { font-weight: 600; color: var(--slate-800); font-size: 0.9rem; }
 .shap-feature-desc { font-size: 0.75rem; color: var(--slate-500); margin-top: 0.125rem; }
 .shap-contribution {
@@ -1108,12 +1244,12 @@ input, select, textarea { font-family: inherit; }
   font-size: 0.85rem; font-weight: 700;
 }
 .shap-contribution.pos {
-  background: linear-gradient(135deg, var(--cyan-100), var(--teal-100));
-  color: var(--cyan-700);
+  background: linear-gradient(135deg, #dceef4, #c8dfe8);
+  color: #1a5a73;
 }
 .shap-contribution.neg {
-  background: linear-gradient(135deg, var(--orange-100), var(--amber-100));
-  color: var(--orange-700);
+  background: linear-gradient(135deg, #ede0ed, #d8c8d8);
+  color: #5a3d5a;
 }
 
 /* Result actions */
@@ -1566,7 +1702,10 @@ input, select, textarea { font-family: inherit; }
   .hero-text { text-align: center; }
   .hero-text .hero-ctas { justify-content: center; }
   .hero-text .trust-badges { justify-content: center; }
-  .hero-visual { display: none; }
+  .hero-visual { order: -1; }
+  .hero-image-container { max-width: 320px; margin: 0 auto; }
+  .hero-image-container.anatomy-hero { max-width: 260px; height: 400px; }
+  .hero-float-badge { display: none; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .features-grid { grid-template-columns: 1fr; }
   .how-grid { flex-direction: column; align-items: center; }
@@ -1574,7 +1713,7 @@ input, select, textarea { font-family: inherit; }
   .form-grid-2, .form-grid-3, .form-grid-4 { grid-template-columns: 1fr; }
   .symptom-grid { grid-template-columns: 1fr; }
   .info-cards { grid-template-columns: repeat(2, 1fr); }
-  .shap-row { grid-template-columns: 100px 1fr 70px; }
+  .shap-row { grid-template-columns: 140px 1fr 70px; gap: 0.5rem; }
   .shap-features-grid { grid-template-columns: 1fr; }
   .result-main-inner { flex-direction: column; text-align: center; }
   .ring-container { margin: 0 auto; }
