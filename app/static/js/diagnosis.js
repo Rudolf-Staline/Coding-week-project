@@ -5,6 +5,10 @@
    et de l'IMC, sélection du sexe, toggles de symptômes,
    et toggle échographie.
    ═══════════════════════════════════════════════════════════ */
+
+/** Âge maximum (années) accepté par le formulaire pédiatrique. */
+const AGE_MAX = 18;
+
 document.addEventListener('DOMContentLoaded', () => {
     const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -118,10 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const age = diffMs / (365.25 * 24 * 60 * 60 * 1000);
         const val = age.toFixed(1);
         if (ageDisp) ageDisp.textContent = val;
-        if (ageFill) ageFill.style.width = Math.min(age / 18 * 100, 100) + '%';
+        if (ageFill) ageFill.style.width = Math.min(age / AGE_MAX * 100, 100) + '%';
         if (ageCard) ageCard.classList.add('active');
         const ageErrorEl = document.getElementById('ageError');
-        if (age > 18) {
+        if (age > AGE_MAX) {
             if (ageDisp) ageDisp.style.color = 'var(--rose-500, #f43f5e)';
             if (ageErrorEl) ageErrorEl.style.display = 'block';
             if (ageEl) ageEl.value = '';
