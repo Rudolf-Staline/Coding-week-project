@@ -1,24 +1,4 @@
-"""
-Model Training Module — Pediatric Appendicitis Diagnosis
-=========================================================
-Responsabilité unique : entraîner les modèles et sélectionner le meilleur.
 
-Ce module ne charge, ne nettoie et ne prétraite aucune donnée.
-Il reçoit des arrays numpy prêts à l'emploi depuis run.py.
-
-Pourquoi des hyperparamètres fixes et non Optuna ?
-  Le tuning Optuna a été testé et a produit de moins bons résultats sur ce
-  dataset (~600 samples). Avec si peu de données, Optuna introduit plus de
-  variance qu'il n'apporte de signal — il overfitte sur le processus de
-  validation lui-même. Les paramètres fixes ci-dessous ont été validés
-  empiriquement et produisent les meilleurs scores observés :
-    RF : Recall=0.9892, Précision=0.9485, AUC=0.9830
-
-Critère de sélection :
-  Priorité 1 : Recall    (FN = appendicite manquée = risque vital)
-  Priorité 2 : Précision (FP = examen inutile, coût moindre)
-  Priorité 3 : ROC-AUC   (tie-breaker)
-"""
 
 import os
 import sys
