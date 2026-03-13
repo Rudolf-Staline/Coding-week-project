@@ -39,6 +39,11 @@
 
   /* Mise en page */
   --navbar-height: 5rem;
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
 }
 
 /* ── Reset & Base ───────────────────────────────────────────────── */
@@ -163,7 +168,7 @@ input, select, textarea { font-family: inherit; }
 /* ── Navbar ─────────────────────────────────────────────────────── */
 .navbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  transition: all 0.5s ease;
+  transition: all var(--transition-slow);
   background: transparent;
 }
 .navbar.scrolled {
@@ -210,12 +215,12 @@ input, select, textarea { font-family: inherit; }
 .nav-links a {
   padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500;
   color: var(--slate-600); border-radius: var(--radius-xl);
-  transition: all 0.3s;
+  transition: all var(--transition-base);
 }
 .nav-links a:hover { color: var(--cyan-600); background: rgba(6,182,212,0.05); }
 
 /* CTA button */
-.btn { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; border-radius: var(--radius-xl); transition: all 0.3s; white-space: nowrap; }
+.btn { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; border-radius: var(--radius-xl); transition: all var(--transition-base); white-space: nowrap; }
 .btn-primary {
   padding: 0.625rem 1.25rem; font-size: 0.875rem;
   background: linear-gradient(135deg, var(--cyan-500), var(--teal-500));
