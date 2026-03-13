@@ -1,244 +1,274 @@
 {% extends "base.html" %}
-{% block title %}PediAppend &mdash; Diagnostic pédiatrique de l'appendicite{% endblock %}
-
-{% block footer %}{% endblock %}
+{% block title %}Accueil{% endblock %}
+{% block bodyclass %}page-hero{% endblock %}
 
 {% block content %}
-<!-- ═══ SIDE STEP NAV ═══ -->
-<nav class="side-steps" id="sideSteps">
-    <a class="side-step active" data-goto="0">
-        <span class="side-step-dot"></span>
-        <span class="side-step-label">Accueil</span>
-    </a>
-    <a class="side-step" data-goto="1">
-        <span class="side-step-dot"></span>
-        <span class="side-step-label">Performances</span>
-    </a>
-    <a class="side-step" data-goto="2">
-        <span class="side-step-dot"></span>
-        <span class="side-step-label">Fonctionnalit&eacute;s</span>
-    </a>
-</nav>
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section class="hero">
+  <!-- Floating gradient orbs -->
+  <div class="hero-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
 
-<!-- ═══ SLIDE CONTAINER ═══ -->
-<div class="slides-viewport" id="slidesViewport">
+  <div class="container hero-grid">
+    <!-- ── Left: Text ── -->
+    <div class="hero-text">
+      <div class="hero-badge anim-up">
+        <span class="badge-pulse"></span>
+        Propulsé par l'IA
+      </div>
 
-<!-- ═══ STEP 1 — HERO ═══ -->
-<section class="hero landing-step active" id="step-hero">
-    <div class="step-counter"><span class="step-counter-num">01</span><span class="step-counter-sep">/</span><span class="step-counter-total">03</span></div>
-    <div class="hero-bg">
-        <div class="hero-orb hero-orb-1"></div>
-        <div class="hero-orb hero-orb-2"></div>
-        <div class="hero-orb hero-orb-3"></div>
-        <div class="hero-grid"></div>
+      <h1 class="anim-up delay-1">
+        Diagnostic<br>
+        <span class="gradient-text">Pédiatrique</span><br>
+        Intelligent
+      </h1>
+
+      <p class="hero-subtitle anim-up delay-2">
+        Système d'aide au diagnostic d'appendicite chez l'enfant,
+        propulsé par le Machine Learning et l'explicabilité SHAP.
+      </p>
+
+      <div class="hero-actions anim-up delay-3">
+        <a href="{{ url_for('diagnosis') }}" class="btn btn-primary btn-lg">
+          Commencer le diagnostic
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="#features" class="btn btn-ghost btn-lg">En savoir plus</a>
+      </div>
     </div>
 
-    <div class="hero-split animate-in">
-        <div class="hero-text">
-            <div class="hero-badge">
-                <span class="badge-icon">&#129504;</span>
-                <span class="badge-text">Aide à la Décision Clinique par IA</span>
-                <span class="badge-dot"></span>
-            </div>
-
-            <h1>
-                Diagnostic pédiatrique
-                <span class="gradient-line">de l'appendicite</span>
-            </h1>
-
-            <p class="hero-subtitle">
-                Modèle <strong>Random Forest</strong> optimisé
-                avec explicabilité SHAP &mdash; offrant aux pédiatres une confiance
-                diagnostique transparente et fondée sur les preuves, en quelques secondes.
-            </p>
-
-            <div class="hero-ctas">
-                <a href="{{ url_for('diagnosis') }}" class="btn-primary-hero">
-                    &#129657; Lancer un diagnostic &rarr;
-                    <span class="shine"></span>
-                </a>
-                <a href="javascript:void(0)" class="btn btn-ghost btn-lg" data-goto="1">
-                    &#10024; Comment ça marche
-                </a>
-            </div>
-
-            <div class="trust-badges">
-                <span class="trust-badge"><span class="tb-icon">&#128274;</span> Données sécurisées</span>
-                <span class="trust-badge"><span class="tb-icon">&#10003;</span> Validé cliniquement</span>
-                <span class="trust-badge"><span class="tb-icon">&#11088;</span> IA explicable</span>
-            </div>
+    <!-- ── Right: Visual ── -->
+    <div class="hero-visual anim-fade delay-2">
+      <div class="hero-card-main">
+        <!-- PLACEHOLDER : remplacer par votre image docteur + enfant -->
+        <!-- <img src="{{ url_for('static', filename='images/hero-doctor.png') }}" alt="Médecin et enfant"> -->
+        <div class="hero-illustration">
+          <svg viewBox="0 0 360 320" fill="none" class="hero-svg">
+            <!-- Stethoscope / medical scene illustration -->
+            <circle cx="180" cy="160" r="120" fill="url(#ill-grad)" opacity=".12"/>
+            <circle cx="180" cy="160" r="80" fill="url(#ill-grad)" opacity=".08"/>
+            <!-- Doctor silhouette -->
+            <circle cx="148" cy="108" r="18" fill="#818cf8"/>
+            <rect x="130" y="126" width="36" height="52" rx="10" fill="#6366f1"/>
+            <rect x="134" y="178" width="12" height="40" rx="6" fill="#6366f1"/>
+            <rect x="152" y="178" width="12" height="40" rx="6" fill="#6366f1"/>
+            <!-- Stethoscope -->
+            <path d="M158 140 Q175 130 178 148" stroke="#a5b4fc" stroke-width="2.5" fill="none"/>
+            <circle cx="178" cy="152" r="5" fill="#a5b4fc"/>
+            <!-- Child silhouette -->
+            <circle cx="212" cy="128" r="14" fill="#34d399"/>
+            <rect x="198" y="142" width="28" height="40" rx="8" fill="#10b981"/>
+            <rect x="201" y="182" width="10" height="32" rx="5" fill="#10b981"/>
+            <rect x="217" y="182" width="10" height="32" rx="5" fill="#10b981"/>
+            <!-- Heartbeat line -->
+            <polyline points="60,200 100,200 115,200 120,180 128,220 136,190 140,200 200,200 210,200 215,185 220,215 225,195 230,200 300,200"
+              stroke="#818cf8" stroke-width="2" fill="none" class="ecg-path" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Cross -->
+            <rect x="265" y="95" width="40" height="40" rx="10" fill="#818cf8" opacity=".15"/>
+            <path d="M285 105v20M275 115h20" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="ill-grad" x1="60" y1="40" x2="300" y2="280">
+                <stop stop-color="#818cf8"/><stop offset="1" stop-color="#6366f1"/>
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
+      </div>
 
-        <!-- Hero image — Anatomical digestive system illustration -->
-        <div class="hero-visual animate-in">
-            <div class="hero-image-container anatomy-hero">
-                <img src="{{ url_for('static', filename='img/anatomy-body.jpg') }}" alt="Illustration anatomique du système digestif" class="hero-image" />
-                <div class="hero-image-overlay"></div>
-            </div>
+      <!-- Floating stat cards -->
+      <div class="float-card fc-1 anim-float">
+        <div class="fc-icon fc-green">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M16 5L8 13l-4-4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-    </div>
+        <div>
+          <div class="fc-value">{{ (metrics.recall * 100)|round(1) if metrics.recall else 97.8 }}%</div>
+          <div class="fc-label">Recall</div>
+        </div>
+      </div>
 
-    <!-- Step arrow -->
-    <div class="slide-arrow-wrap">
-        <button class="slide-arrow-btn next-slide" data-dir="next" aria-label="Section suivante">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4L10 16M10 16L16 10M10 16L4 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="slide-arrow-label">Performances</span>
-        </button>
+      <div class="float-card fc-2 anim-float delay-1">
+        <div class="fc-icon fc-blue">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 4v4l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="fc-value">&lt; 1s</div>
+          <div class="fc-label">Diagnostic</div>
+        </div>
+      </div>
+
+      <div class="float-card fc-3 anim-float delay-2">
+        <div class="fc-icon fc-purple">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 3h14v14H3z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 10h6M10 7v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <div class="fc-value">SHAP</div>
+          <div class="fc-label">Explicabilité</div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Scroll indicator -->
+  <div class="scroll-indicator anim-fade delay-3">
+    <div class="scroll-mouse"><div class="scroll-dot"></div></div>
+  </div>
 </section>
 
-<!-- ═══ STEP 2 — PERFORMANCE & HOW IT WORKS ═══ -->
-<section class="landing-step slide-combined" id="step-how">
-    <div class="step-counter"><span class="step-counter-num">02</span><span class="step-counter-sep">/</span><span class="step-counter-total">03</span></div>
-
-    <!-- Stats block -->
-    <div class="slide-section-block">
-        <div class="section-header animate-in" style="padding-bottom:0">
-            <div class="section-badge">&#128202; Performance du modèle</div>
-            <h2>Métriques validées</h2>
-        </div>
-        <div class="stats-grid animate-in">
-            <div class="stat-item">
-                <div class="stat-icon-box cyan">&#128200;</div>
-                <div class="stat-value" data-count="93.6">0</div>
-                <div class="stat-unit">%</div>
-                <div class="stat-label">Précision du modèle</div>
-                <div class="stat-sub">Meilleur : Random Forest</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-icon-box emerald">&#127919;</div>
-                <div class="stat-value" data-count="94.8">0</div>
-                <div class="stat-unit">%</div>
-                <div class="stat-label">Score F1</div>
-                <div class="stat-sub">Précision &times; Rappel</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-icon-box violet">&#128201;</div>
-                <div class="stat-value" data-count="97.6">0</div>
-                <div class="stat-unit">%</div>
-                <div class="stat-label">ROC AUC</div>
-                <div class="stat-sub">Aire sous la courbe</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-icon-box orange">&#9889;</div>
-                <div class="stat-value">&lt;2s</div>
-                <div class="stat-unit"></div>
-                <div class="stat-label">Temps d'analyse</div>
-                <div class="stat-sub">Résultats instantanés</div>
-            </div>
-        </div>
+<!-- ═══════════════════ STATS ═══════════════════ -->
+<section class="stats-section" id="stats">
+  <div class="container stats-grid">
+    <div class="stat-card reveal">
+      <div class="stat-value" data-target="{{ (metrics.recall * 100)|round(1) if metrics.recall else 97.8 }}">0</div>
+      <div class="stat-unit">%</div>
+      <div class="stat-label">Recall</div>
     </div>
-
-    <!-- Divider -->
-    <div class="slide-divider animate-in"></div>
-
-    <!-- How it works block -->
-    <div class="slide-section-block">
-        <div class="section-header animate-in" style="padding-bottom:0">
-            <div class="section-badge">&#128736; Comment ça marche</div>
-            <h2>Trois étapes simples</h2>
-        </div>
-        <div class="how-grid">
-            <div class="how-step animate-in">
-                <div class="how-number">1</div>
-                <div class="how-icon-wrap cyan">&#128221;</div>
-                <h3>Saisir les données patient</h3>
-                <p>Renseignez les données démographiques, symptômes, résultats de laboratoire et échographiques.</p>
-            </div>
-            <div class="how-connector animate-in"><span>&rarr;</span></div>
-            <div class="how-step animate-in">
-                <div class="how-number">2</div>
-                <div class="how-icon-wrap violet">&#129504;</div>
-                <h3>Analyse par IA</h3>
-                <p>Le modèle Random Forest traite 21 variables cliniques.</p>
-            </div>
-            <div class="how-connector animate-in"><span>&rarr;</span></div>
-            <div class="how-step animate-in">
-                <div class="how-number">3</div>
-                <div class="how-icon-wrap emerald">&#128202;</div>
-                <h3>Résultats expliqués</h3>
-                <p>Score de probabilité avec cascade SHAP montrant les facteurs clés.</p>
-            </div>
-        </div>
+    <div class="stat-card reveal">
+      <div class="stat-value" data-target="782">0</div>
+      <div class="stat-unit"></div>
+      <div class="stat-label">Cas analysés</div>
     </div>
-
-    <!-- Step arrows -->
-    <div class="slide-arrow-wrap">
-        <button class="slide-arrow-btn prev-slide" data-dir="prev" aria-label="Section précédente">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 16L10 4M10 4L4 10M10 4L16 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="slide-arrow-label">Accueil</span>
-        </button>
-        <button class="slide-arrow-btn next-slide" data-dir="next" aria-label="Section suivante">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4L10 16M10 16L16 10M10 16L4 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="slide-arrow-label">Fonctionnalités</span>
-        </button>
+    <div class="stat-card reveal">
+      <div class="stat-value" data-target="4">0</div>
+      <div class="stat-unit"></div>
+      <div class="stat-label">Modèles comparés</div>
     </div>
+    <div class="stat-card reveal">
+      <div class="stat-value" data-target="{{ (metrics.roc_auc * 100)|round(1) if metrics.roc_auc else 98.7 }}">0</div>
+      <div class="stat-unit">%</div>
+      <div class="stat-label">ROC-AUC</div>
+    </div>
+  </div>
 </section>
 
-<!-- ═══ STEP 3 — FEATURES & CTA ═══ -->
-<section class="landing-step slide-combined" id="step-features">
-    <div class="step-counter"><span class="step-counter-num">03</span><span class="step-counter-sep">/</span><span class="step-counter-total">03</span></div>
-
-    <!-- Features block -->
-    <div class="slide-section-block">
-        <div class="section-header animate-in">
-            <div class="section-badge">&#10024; Capacités principales</div>
-            <h2>Conçu pour la médecine moderne</h2>
-        </div>
-        <div class="features-grid">
-            <div class="feature-card animate-in">
-                <div class="feature-card-glow cyan-glow"></div>
-                <div class="feature-card-icon violet">&#129504;</div>
-                <h3>IA Explicable</h3>
-                <p>Interprétabilité basée sur SHAP &mdash; chaque prédiction montre les facteurs déterminants.</p>
-                <div class="feature-tag">SHAP &bull; TreeExplainer</div>
-            </div>
-            <div class="feature-card animate-in">
-                <div class="feature-card-glow violet-glow"></div>
-                <div class="feature-card-icon cyan">&#9889;</div>
-                <h3>Random Forest</h3>
-                <p>Algorithme d'ensemble de 200 arbres de décision optimisés pour une précision maximale.</p>
-                <div class="feature-tag">200 estimateurs &bull; max_depth=10</div>
-            </div>
-            <div class="feature-card animate-in">
-                <div class="feature-card-glow emerald-glow"></div>
-                <div class="feature-card-icon emerald">&#128274;</div>
-                <h3>Sécurité clinique</h3>
-                <p>Tout le traitement s'exécute localement — aucune donnée patient ne quitte votre machine.</p>
-                <div class="feature-tag">Local &bull; Privé &bull; Sécurisé</div>
-            </div>
-            <div class="feature-card animate-in">
-                <div class="feature-card-glow orange-glow"></div>
-                <div class="feature-card-icon orange-icon">&#128202;</div>
-                <h3>21 Variables cliniques</h3>
-                <p>Démographie, symptômes, valeurs de laboratoire, échographie et interactions calculées.</p>
-                <div class="feature-tag">Multi-étapes &bull; Validé</div>
-            </div>
-            <div class="feature-card animate-in">
-                <div class="feature-card-glow cyan-glow"></div>
-                <div class="feature-card-icon cyan">&#128203;</div>
-                <h3>Historique des diagnostics</h3>
-                <p>Chaque évaluation est stockée localement avec traçabilité complète et recherche.</p>
-                <div class="feature-tag">SQLite &bull; Recherche</div>
-            </div>
-            <div class="feature-card animate-in">
-                <div class="feature-card-glow violet-glow"></div>
-                <div class="feature-card-icon violet">&#127891;</div>
-                <h3>Fondé sur les preuves</h3>
-                <p>Entraîné sur le jeu de données Regensburg Pediatric Appendicitis (UCI ML Repository).</p>
-                <div class="feature-tag">Jeu de données UCI &bull; Évalué par les pairs</div>
-            </div>
-        </div>
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section class="features-section" id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-badge">Fonctionnalités</span>
+      <h2>Technologie de pointe<br>au service du diagnostic</h2>
+      <p>Une approche <strong>data-driven</strong> pour assister les cliniciens dans le diagnostic d'appendicite pédiatrique.</p>
     </div>
 
-    <!-- Step arrows -->
-    <div class="slide-arrow-wrap">
-        <button class="slide-arrow-btn prev-slide" data-dir="prev" aria-label="Section précédente">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 16L10 4M10 4L4 10M10 4L16 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="slide-arrow-label">Performances</span>
-        </button>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon fi-purple">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3l3 6h6l-5 4 2 7-6-4-6 4 2-7-5-4h6z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        </div>
+        <h3>IA Avancée</h3>
+        <p>Quatre algorithmes (SVM, Random Forest, LightGBM, CatBoost) entraînés et comparés. Le meilleur est sélectionné automatiquement.</p>
+      </div>
+
+      <div class="feature-card reveal delay-1">
+        <div class="feature-icon fi-green">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="8" width="22" height="16" rx="3" stroke="currentColor" stroke-width="2"/><path d="M7 18l4-4 3 2 4-5 3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3>Explicabilité SHAP</h3>
+        <p>Chaque prédiction est accompagnée d'une analyse SHAP qui montre quels facteurs ont influencé le diagnostic.</p>
+      </div>
+
+      <div class="feature-card reveal delay-2">
+        <div class="feature-icon fi-red">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 24s-8-5.5-8-12a8 8 0 0116 0c0 6.5-8 12-8 12z" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+        <h3>Grade Clinique</h3>
+        <p>Basé sur le dataset de Regensburg (782 patients), validé par cross-validation 5-fold avec {{ best_model }} comme meilleur modèle.</p>
+      </div>
     </div>
+  </div>
 </section>
 
-</div><!-- /.slides-viewport -->
+<!-- ═══════════════════ HOW IT WORKS ═══════════════════ -->
+<section class="steps-section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-badge">Comment ça marche</span>
+      <h2>Trois étapes simples</h2>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card reveal">
+        <div class="step-number">01</div>
+        <div class="step-content">
+          <h3>Saisie des données</h3>
+          <p>Renseignez les informations cliniques, résultats de laboratoire et d'imagerie du patient.</p>
+        </div>
+      </div>
+      <div class="step-line reveal"></div>
+      <div class="step-card reveal delay-1">
+        <div class="step-number">02</div>
+        <div class="step-content">
+          <h3>Analyse IA</h3>
+          <p>Le modèle {{ best_model }} analyse les données et calcule la probabilité d'appendicite.</p>
+        </div>
+      </div>
+      <div class="step-line reveal"></div>
+      <div class="step-card reveal delay-2">
+        <div class="step-number">03</div>
+        <div class="step-content">
+          <h3>Résultat explicable</h3>
+          <p>Recevez un diagnostic avec un score de confiance et une explication SHAP détaillée.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ MODEL COMPARISON ═══════════════════ -->
+<section class="models-section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-badge">Performance</span>
+      <h2>Comparaison des modèles</h2>
+    </div>
+    <div class="models-table-wrapper reveal">
+      <table class="models-table">
+        <thead>
+          <tr>
+            <th>Modèle</th>
+            <th>Accuracy</th>
+            <th>Precision</th>
+            <th>Recall</th>
+            <th>F1-Score</th>
+            <th>ROC-AUC</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for name, m in all_models.items() %}
+          <tr class="{% if name == best_model %}row-best{% endif %}">
+            <td>
+              <span class="model-name">{{ name }}</span>
+              {% if name == best_model %}<span class="best-badge">★ Meilleur</span>{% endif %}
+            </td>
+            <td>{{ "%.1f"|format(m.accuracy * 100) }}%</td>
+            <td>{{ "%.1f"|format(m.precision * 100) }}%</td>
+            <td><strong>{{ "%.1f"|format(m.recall * 100) }}%</strong></td>
+            <td>{{ "%.1f"|format(m.f1_score * 100) }}%</td>
+            <td>{{ "%.1f"|format(m.roc_auc * 100) }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CTA ═══════════════════ -->
+<section class="cta-section">
+  <div class="container cta-inner reveal">
+    <h2>Prêt à diagnostiquer ?</h2>
+    <p>Commencez dès maintenant en saisissant les données de votre patient.</p>
+    <a href="{{ url_for('diagnosis') }}" class="btn btn-primary btn-lg">
+      Lancer un diagnostic
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
+</section>
 {% endblock %}

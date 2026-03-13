@@ -1,272 +1,261 @@
 {% extends "base.html" %}
-{% block title %}PediAppend &mdash; Diagnostic clinique{% endblock %}
+{% block title %}Diagnostic{% endblock %}
 
 {% block content %}
-<section class="form-section" id="diagnosis">
-    <div class="form-outer">
-        <div class="section-title animate-in">
-            <h2>Diagnostic clinique</h2>
-            <p>Saisissez les donn&eacute;es du patient pour une &eacute;valuation par IA</p>
-        </div>
-
-        <div class="step-progress animate-in" id="stepProgress">
-            <div class="step-indicators">
-                <div class="step-item">
-                    <div class="step-circle active" data-step="0">&#128100;</div>
-                    <div class="step-info"><p class="step-label-text" style="font-weight:600;color:var(--slate-800)">D&eacute;mographie</p><p style="font-size:.75rem;color:var(--slate-400)">Infos patient</p></div>
-                </div>
-                <div class="step-connector"><div class="step-connector-fill" style="width:0%"></div></div>
-                <div class="step-item">
-                    <div class="step-circle pending" data-step="1">&#128147;</div>
-                    <div class="step-info"><p class="step-label-text" style="font-weight:600;color:var(--slate-400)">Sympt&ocirc;mes</p><p style="font-size:.75rem;color:var(--slate-400)">Pr&eacute;sentation clinique</p></div>
-                </div>
-                <div class="step-connector"><div class="step-connector-fill" style="width:0%"></div></div>
-                <div class="step-item">
-                    <div class="step-circle pending" data-step="2">&#129657;</div>
-                    <div class="step-info"><p class="step-label-text" style="font-weight:600;color:var(--slate-400)">Examen &amp; Labo</p><p style="font-size:.75rem;color:var(--slate-400)">Examen physique &amp; analyses</p></div>
-                </div>
-            </div>
-            <div class="step-progress-bar"><div class="step-progress-fill" style="width:33%"></div></div>
-        </div>
-
-        <form action="{{ url_for('predict') }}" method="POST" id="diagnosisForm">
-            <div class="form-card">
-                <!-- ═══ &Eacute;tape 0 : D&eacute;mographie ═══ -->
-                <div class="form-step" data-step="0">
-                    <div class="form-card-body">
-                        <div class="form-section-header">
-                            <div class="form-section-icon violet">&#128100;</div>
-                            <div><h2>D&eacute;mographie du patient</h2><p>Informations de base pour l&rsquo;&eacute;valuation</p></div>
-                        </div>
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label><span class="label-icon">&#128101;</span> Pr&eacute;nom</label>
-                                <input type="text" id="patient_first_name" name="patient_first_name" placeholder="ex. Marie" maxlength="60" required>
-                                <span class="field-error">Requis</span>
-                            </div>
-                            <div class="form-group">
-                                <label><span class="label-icon">&#128101;</span> Nom</label>
-                                <input type="text" id="patient_last_name" name="patient_last_name" placeholder="ex. Dupont" maxlength="60" required>
-                                <span class="field-error">Requis</span>
-                            </div>
-                        </div>
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label><span class="label-icon">&#128197;</span> Date de naissance</label>
-                                <input type="date" id="DateOfBirth" required>
-                                <span class="field-hint">Date de naissance du patient</span>
-                                <span class="field-error">Requis</span>
-                            </div>
-                            <div class="form-group">
-                                <label><span class="label-icon">&#128197;</span> Date d&rsquo;examen</label>
-                                <input type="date" id="ExamDate" required>
-                                <span class="field-hint">Date de la consultation</span>
-                                <span class="field-error">Requis</span>
-                            </div>
-                        </div>
-                        <div class="bmi-card" id="ageCard">
-                            <div class="bmi-card-header">
-                                <div class="bmi-card-left">
-                                    <div class="bmi-card-icon">&#128118;</div>
-                                    <div><div class="bmi-card-label">&Acirc;ge calcul&eacute;</div><div class="bmi-card-sublabel">Bas&eacute; sur les dates</div></div>
-                                </div>
-                                <div><span class="bmi-value" id="ageDisplay">--</span><span class="bmi-unit">ans</span></div>
-                            </div>
-                            <div class="bmi-bar"><div class="bmi-bar-fill" id="ageFill" style="width:0%"></div></div>
-                            <input type="hidden" id="Age" name="Age" required>
-                            <div class="bmi-hint">&#9432; &Acirc;ge p&eacute;diatrique : 0-18 ans</div>
-                            <div class="bmi-hint" id="ageError" style="display:none;color:#f43f5e;font-weight:600;">&#9888; L&rsquo;&acirc;ge ne peut pas d&eacute;passer 18 ans (p&eacute;diatrique)</div>
-                        </div>
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label><span class="label-icon">&#128100;</span> Sexe biologique</label>
-                                <div class="sex-toggle">
-                                    <button type="button" class="sex-btn" data-value="male" onclick="selectSex(this)">&#9794; Masculin</button>
-                                    <button type="button" class="sex-btn" data-value="female" onclick="selectSex(this)">&#9792; F&eacute;minin</button>
-                                </div>
-                                <input type="hidden" id="Sex" name="Sex" required>
-                                <span class="field-error">Requis</span>
-                            </div>
-                            <div class="form-group">
-                                <label><span class="label-icon">&#128207;</span> Taille <span class="unit">(cm)</span></label>
-                                <input type="number" id="Height" name="Height" step="0.1" min="30" max="200" placeholder="ex. 140" required>
-                                <span class="field-error">Requis</span>
-                            </div>
-                            <div class="form-group">
-                                <label><span class="label-icon">&#9878;</span> Poids <span class="unit">(kg)</span></label>
-                                <input type="number" id="Weight" name="Weight" step="0.1" min="3" max="150" placeholder="ex. 36" required>
-                                <span class="field-error">Requis</span>
-                            </div>
-                        </div>
-                        <div class="bmi-card" id="bmiCard">
-                            <div class="bmi-card-header">
-                                <div class="bmi-card-left">
-                                    <div class="bmi-card-icon">&#128200;</div>
-                                    <div><div class="bmi-card-label">IMC calcul&eacute;</div><div class="bmi-card-sublabel">Indice de Masse Corporelle</div></div>
-                                </div>
-                                <div><span class="bmi-value" id="bmiDisplay">--</span><span class="bmi-unit">kg/m&sup2;</span></div>
-                            </div>
-                            <div class="bmi-bar"><div class="bmi-bar-fill" id="bmiFill" style="width:0%"></div></div>
-                            <input type="hidden" id="BMI" name="BMI">
-                            <div class="bmi-hint">&#9432; IMC p&eacute;diatrique normal : 14-24 kg/m&sup2;</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ═══ &Eacute;tape 1 : Sympt&ocirc;mes ═══ -->
-                <div class="form-step" data-step="1" style="display:none">
-                    <div class="form-card-body">
-                        <div class="form-section-header">
-                            <div class="form-section-icon cyan">&#128147;</div>
-                            <div><h2>Sympt&ocirc;mes &amp; Pr&eacute;sentation</h2><p>Sympt&ocirc;mes cliniques et signes associ&eacute;s</p></div>
-                        </div>
-
-                        <h4 style="font-weight:600;color:var(--slate-700);margin-bottom:1rem">Sympt&ocirc;mes associ&eacute;s</h4>
-                        <div class="symptom-grid">
-                            <label class="symptom-toggle" data-field="Nausea">
-                                <div class="toggle-left"><span class="toggle-emoji">&#129326;</span><span class="toggle-label">Naus&eacute;es</span></div>
-                                <div class="switch" data-target="Nausea"></div>
-                                <input type="hidden" name="Nausea" value="no">
-                            </label>
-                            <label class="symptom-toggle" data-field="Loss_of_Appetite">
-                                <div class="toggle-left"><span class="toggle-emoji">&#127869;</span><span class="toggle-label">Perte d&rsquo;app&eacute;tit</span></div>
-                                <div class="switch" data-target="Loss_of_Appetite"></div>
-                                <input type="hidden" name="Loss_of_Appetite" value="no">
-                            </label>
-                            <label class="symptom-toggle" data-field="Migratory_Pain">
-                                <div class="toggle-left"><span class="toggle-emoji">&#8599;</span><span class="toggle-label">Douleur migratoire</span></div>
-                                <div class="switch" data-target="Migratory_Pain"></div>
-                                <input type="hidden" name="Migratory_Pain" value="no">
-                            </label>
-                            <label class="symptom-toggle" data-field="Lower_Right_Abd_Pain">
-                                <div class="toggle-left"><span class="toggle-emoji">&#128308;</span><span class="toggle-label">Douleur FID</span></div>
-                                <div class="switch" data-target="Lower_Right_Abd_Pain"></div>
-                                <input type="hidden" name="Lower_Right_Abd_Pain" value="no">
-                            </label>
-                            <label class="symptom-toggle" data-field="Coughing_Pain">
-                                <div class="toggle-left"><span class="toggle-emoji">&#129319;</span><span class="toggle-label">Douleur &agrave; la toux</span></div>
-                                <div class="switch" data-target="Coughing_Pain"></div>
-                                <input type="hidden" name="Coughing_Pain" value="no">
-                            </label>
-                        </div>
-
-                        <div class="form-grid-2" style="margin-top:2rem">
-                            <div class="form-group">
-                                <label>P&eacute;ritonite</label>
-                                <select id="Peritonitis" name="Peritonitis" required>
-                                    <option value="" disabled selected>S&eacute;lectionner</option>
-                                    <option value="no">Non</option>
-                                    <option value="local">Locale</option>
-                                    <option value="generalized">G&eacute;n&eacute;ralis&eacute;e</option>
-                                </select>
-                                <span class="field-error">Requis</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ═══ &Eacute;tape 2 : Examen &amp; Labo ═══ -->
-                <div class="form-step" data-step="2" style="display:none">
-                    <div class="form-card-body">
-                        <div class="form-section-header">
-                            <div class="form-section-icon emerald">&#129657;</div>
-                            <div><h2>Examen clinique &amp; Laboratoire</h2><p>Examen physique et r&eacute;sultats biologiques</p></div>
-                        </div>
-
-                        <h4 style="font-weight:600;color:var(--slate-700);margin-bottom:1rem">Examen physique</h4>
-                        <div class="form-grid-3">
-                            <div class="form-group">
-                                <label><span class="label-icon">&#127777;</span> Temp&eacute;rature <span class="unit">(&deg;C)</span></label>
-                                <input type="number" id="Body_Temperature" name="Body_Temperature" step="0.1" min="35" max="42" placeholder="ex. 37.5" required>
-                                <span class="field-error">Requis</span>
-                            </div>
-                            <div class="form-group">
-                                <label>Rebond controlat&eacute;ral</label>
-                                <select name="Contralateral_Rebound_Tenderness" required>
-                                    <option value="" disabled selected>S&eacute;lectionner</option>
-                                    <option value="yes">Oui</option>
-                                    <option value="no">Non</option>
-                                </select>
-                                <span class="field-error">Requis</span>
-                            </div>
-                            <div class="form-group">
-                                <label>Rebond ipsilat&eacute;ral</label>
-                                <select name="Ipsilateral_Rebound_Tenderness" required>
-                                    <option value="" disabled selected>S&eacute;lectionner</option>
-                                    <option value="yes">Oui</option>
-                                    <option value="no">Non</option>
-                                </select>
-                                <span class="field-error">Requis</span>
-                            </div>
-                        </div>
-
-                        <div class="symptom-grid" style="margin-top:1.5rem;margin-bottom:2rem">
-                            <label class="symptom-toggle" data-field="Psoas_Sign">
-                                <div class="toggle-left"><span class="toggle-emoji">&#128170;</span><span class="toggle-label">Signe du psoas</span></div>
-                                <div class="switch" data-target="Psoas_Sign"></div>
-                                <input type="hidden" name="Psoas_Sign" value="no">
-                            </label>
-                            <label class="symptom-toggle" data-field="Neutrophilia">
-                                <div class="toggle-left"><span class="toggle-emoji">&#129656;</span><span class="toggle-label">Neutrophilie</span></div>
-                                <div class="switch" data-target="Neutrophilia"></div>
-                                <input type="hidden" name="Neutrophilia" value="no">
-                            </label>
-                        </div>
-
-                        <h4 style="font-weight:600;color:var(--slate-700);margin-bottom:1rem">R&eacute;sultats biologiques</h4>
-                        <div class="form-grid-3">
-                            <div class="form-group">
-                                <label><span class="label-icon">&#128300;</span> Leucocytes (WBC) <span class="unit">(10&sup3;/&micro;L)</span></label>
-                                <input type="number" id="WBC_Count" name="WBC_Count" step="0.01" min="0" placeholder="ex. 12.5" required>
-                                <span class="field-hint">R&eacute;f&eacute;rence : 4.5-13.5</span>
-                                <span class="field-error">Requis</span>
-                            </div>
-                            <div class="form-group">
-                                <label><span class="label-icon">&#128300;</span> CRP <span class="unit">(mg/L)</span></label>
-                                <input type="number" name="CRP" step="0.1" min="0" placeholder="ex. 15.0" required>
-                                <span class="field-hint">R&eacute;f&eacute;rence : &lt;10</span>
-                                <span class="field-error">Requis</span>
-                            </div>
-                        </div>
-
-                        <h4 style="font-weight:600;color:var(--slate-700);margin:2rem 0 1rem">&Eacute;chographie</h4>
-                        <div class="form-grid-3">
-                            <div class="form-group">
-                                <label>Appendice visible &agrave; l&rsquo;&eacute;cho</label>
-                                <select name="Appendix_on_US" required>
-                                    <option value="" disabled selected>S&eacute;lectionner</option>
-                                    <option value="yes">Oui</option>
-                                    <option value="no">Non</option>
-                                </select>
-                                <span class="field-error">Requis</span>
-                            </div>
-                            <div class="form-group">
-                                <label>Diam&egrave;tre appendice <span class="unit">(mm)</span></label>
-                                <input type="number" name="Appendix_Diameter" step="0.1" min="0" placeholder="ex. 8.5">
-                            </div>
-                            <div class="form-group">
-                                <label>&Eacute;panchement libre</label>
-                                <select name="Free_Fluids" required>
-                                    <option value="" disabled selected>S&eacute;lectionner</option>
-                                    <option value="yes">Oui</option>
-                                    <option value="no">Non</option>
-                                </select>
-                                <span class="field-error">Requis</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-card-footer">
-                    <button type="button" class="btn btn-ghost" id="prevBtn" style="visibility:hidden">
-                        &larr; Pr&eacute;c&eacute;dent
-                    </button>
-                    <button type="button" class="btn btn-primary btn-lg" id="nextBtn">
-                        Suivant &rarr;
-                    </button>
-                </div>
-            </div>
-        </form>
+<section class="diagnosis-hero">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-badge">Nouveau patient</span>
+      <h1>Évaluation clinique</h1>
+      <p>Saisissez les données du patient. Cliquez sur une zone du corps pour accéder à la section correspondante.</p>
     </div>
+  </div>
 </section>
+
+<section class="diagnosis-section">
+  <div class="container diagnosis-layout">
+
+    <!-- ═══════════ LEFT: BODY DIAGRAM ═══════════ -->
+    <aside class="body-panel">
+      <div class="body-card">
+        <div class="body-diagram-wrapper">
+          <div class="body-viewer-shell" id="bodyViewerShell">
+
+            <svg viewBox="0 0 200 440" class="body-svg" id="bodySvg" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="bgGlow" cx="50%" cy="38%" r="55%">
+                  <stop offset="0%" stop-color="#1a2744"/>
+                  <stop offset="100%" stop-color="#0c1322"/>
+                </radialGradient>
+                <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#d4a986"/>
+                  <stop offset="100%" stop-color="#c49474"/>
+                </linearGradient>
+                <radialGradient id="headGrad" cx="50%" cy="40%" r="50%">
+                  <stop offset="0%" stop-color="#e0bb9a"/>
+                  <stop offset="100%" stop-color="#c9a07a"/>
+                </radialGradient>
+                <linearGradient id="organRed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#c0392b"/>
+                  <stop offset="100%" stop-color="#962d22"/>
+                </linearGradient>
+                <linearGradient id="organPink" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#e88e7a"/>
+                  <stop offset="100%" stop-color="#c96b5a"/>
+                </linearGradient>
+                <linearGradient id="organBrown" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#8b5e3c"/>
+                  <stop offset="100%" stop-color="#6a442a"/>
+                </linearGradient>
+                <linearGradient id="lungGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#e8a0a0"/>
+                  <stop offset="100%" stop-color="#cc7777"/>
+                </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <filter id="softShadow">
+                  <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity=".3"/>
+                </filter>
+              </defs>
+
+              <!-- Background -->
+              <rect width="200" height="440" fill="url(#bgGlow)" rx="0"/>
+
+              <!-- === BODY SILHOUETTE === -->
+              <g filter="url(#softShadow)">
+                <!-- Head -->
+                <ellipse cx="100" cy="52" rx="22" ry="26" fill="url(#headGrad)"/>
+                <!-- Neck -->
+                <rect x="91" y="76" width="18" height="14" rx="4" fill="url(#skinGrad)"/>
+                <!-- Torso -->
+                <path d="M68 90 Q60 92 58 105 L56 190 Q56 210 70 215 L80 218 Q95 222 100 222 Q105 222 120 218 L130 215 Q144 210 144 190 L142 105 Q140 92 132 90 Z" fill="url(#skinGrad)"/>
+                <!-- Left arm -->
+                <path d="M58 100 Q48 102 42 115 L34 180 Q30 195 32 210 L36 230 Q38 236 42 236 Q46 236 46 230 L48 210 Q50 195 48 180 L52 140 Q54 120 58 108" fill="url(#skinGrad)" opacity=".92"/>
+                <!-- Right arm -->
+                <path d="M142 100 Q152 102 158 115 L166 180 Q170 195 168 210 L164 230 Q162 236 158 236 Q154 236 154 230 L152 210 Q150 195 152 180 L148 140 Q146 120 142 108" fill="url(#skinGrad)" opacity=".92"/>
+                <!-- Hips / pelvis -->
+                <path d="M70 215 Q68 225 66 240 L64 260 Q80 268 100 268 Q120 268 136 260 L134 240 Q132 225 130 215 Q115 222 100 222 Q85 222 70 215 Z" fill="url(#skinGrad)"/>
+                <!-- Left leg -->
+                <path d="M66 258 Q62 275 60 310 L58 370 Q57 390 60 410 L62 425 Q64 432 70 432 L78 432 Q82 432 82 426 L80 410 Q78 390 78 370 L80 310 Q82 280 84 268" fill="url(#skinGrad)" opacity=".92"/>
+                <!-- Right leg -->
+                <path d="M134 258 Q138 275 140 310 L142 370 Q143 390 140 410 L138 425 Q136 432 130 432 L122 432 Q118 432 118 426 L120 410 Q122 390 122 370 L120 310 Q118 280 116 268" fill="url(#skinGrad)" opacity=".92"/>
+              </g>
+
+              <!-- === INTERNAL ORGANS === -->
+              <!-- Lungs -->
+              <ellipse cx="82" cy="125" rx="14" ry="22" fill="url(#lungGrad)" opacity=".7"/>
+              <ellipse cx="118" cy="125" rx="14" ry="22" fill="url(#lungGrad)" opacity=".7"/>
+              <!-- Heart -->
+              <path d="M95 125 Q90 118 93 112 Q96 108 100 112 Q104 108 107 112 Q110 118 105 125 L100 132 Z" fill="url(#organRed)" opacity=".85"/>
+              <!-- Stomach -->
+              <ellipse cx="108" cy="165" rx="12" ry="10" fill="url(#organPink)" opacity=".7" transform="rotate(-10 108 165)"/>
+              <!-- Liver -->
+              <ellipse cx="85" cy="158" rx="18" ry="10" fill="url(#organBrown)" opacity=".65" transform="rotate(5 85 158)"/>
+              <!-- Intestines -->
+              <ellipse cx="100" cy="200" rx="22" ry="16" fill="url(#organPink)" opacity=".5"/>
+              <!-- Kidneys -->
+              <ellipse cx="78" cy="180" rx="6" ry="10" fill="url(#organRed)" opacity=".5" transform="rotate(-10 78 180)"/>
+              <ellipse cx="122" cy="180" rx="6" ry="10" fill="url(#organRed)" opacity=".5" transform="rotate(10 122 180)"/>
+              <!-- Bladder -->
+              <ellipse cx="100" cy="235" rx="10" ry="8" fill="#e8c86a" opacity=".45"/>
+              <!-- Appendix marker -->
+              <circle cx="120" cy="210" r="4" fill="#ef4444" opacity=".7"/>
+              <circle cx="120" cy="210" r="7" fill="none" stroke="#ef4444" stroke-width="1" opacity=".4">
+                <animate attributeName="r" values="7;12;7" dur="2s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values=".4;0;.4" dur="2s" repeatCount="indefinite"/>
+              </circle>
+
+              <!-- === ZONE LABELS (on body) === -->
+              <text x="100" y="52" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="5" font-weight="600" letter-spacing=".5">PATIENT</text>
+              <text x="100" y="130" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="4.5" letter-spacing=".3">SANG</text>
+              <text x="100" y="198" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="4.5" letter-spacing=".3">ABDOMEN</text>
+              <text x="100" y="240" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="4.5" letter-spacing=".3">URINES</text>
+              <text x="42" y="175" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="4" letter-spacing=".3" transform="rotate(-90 42 175)">ECHO</text>
+              <text x="158" y="175" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="4" letter-spacing=".3" transform="rotate(90 158 175)">SCORES</text>
+
+              <!-- === CLICKABLE ZONES (transparent) === -->
+              <!-- Head / Patient info -->
+              <ellipse class="body-zone overlay-zone" data-target="patient_info"
+                       cx="100" cy="52" rx="28" ry="30"/>
+              <!-- Thorax / Blood -->
+              <ellipse class="body-zone overlay-zone" data-target="blood"
+                       cx="100" cy="128" rx="35" ry="30"/>
+              <!-- Abdomen -->
+              <ellipse class="body-zone overlay-zone" data-target="abdominal"
+                       cx="100" cy="192" rx="32" ry="30"/>
+              <!-- Lower abdomen / Urinary -->
+              <ellipse class="body-zone overlay-zone" data-target="urinary"
+                       cx="100" cy="240" rx="28" ry="20"/>
+              <!-- Left side / Imaging (echo) -->
+              <ellipse class="body-zone overlay-zone" data-target="imaging"
+                       cx="42" cy="175" rx="16" ry="50"/>
+              <!-- Right side / Scores -->
+              <ellipse class="body-zone overlay-zone" data-target="scores"
+                       cx="158" cy="175" rx="16" ry="50"/>
+
+              <!-- Appendix label -->
+              <text x="134" y="213" fill="#ef4444" font-size="4.5" font-weight="700" opacity=".8">Appendice</text>
+            </svg>
+
+            <!-- Symptom markers overlay -->
+            <svg viewBox="0 0 200 440" class="symptom-markers-container" id="symptomMarkersContainer"></svg>
+
+            <div class="viewer-legend">
+              <button type="button" class="body-zone legend-pill symptom-zone" data-target="patient_info" onclick="document.getElementById('section-patient_info')&&toggleSection('patient_info')">Patient</button>
+              <button type="button" class="body-zone legend-pill symptom-zone" data-target="blood" onclick="document.getElementById('section-blood')&&toggleSection('blood')">Sang</button>
+              <button type="button" class="body-zone legend-pill symptom-zone" data-target="abdominal" onclick="document.getElementById('section-abdominal')&&toggleSection('abdominal')">Abdomen</button>
+              <button type="button" class="body-zone legend-pill symptom-zone" data-target="urinary" onclick="document.getElementById('section-urinary')&&toggleSection('urinary')">Urines</button>
+              <button type="button" class="body-zone legend-pill" data-target="imaging" onclick="document.getElementById('section-imaging')&&toggleSection('imaging')">Echo</button>
+              <button type="button" class="body-zone legend-pill" data-target="scores" onclick="document.getElementById('section-scores')&&toggleSection('scores')">Scores</button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Progress indicator -->
+        <div class="body-progress">
+          <div class="progress-label">Complétion</div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="formProgress" style="width:0%"></div>
+          </div>
+          <div class="progress-percent" id="formProgressText">0%</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══════════ RIGHT: FORM ═══════════ -->
+    <div class="form-panel">
+      <form action="{{ url_for('predict') }}" method="POST" id="diagnosisForm">
+
+        {% for group_key, group in feature_groups.items() %}
+        <div class="form-section {% if group_key == 'patient_info' %}open{% endif %}"
+             id="section-{{ group_key }}" data-section="{{ group_key }}">
+
+          <button type="button" class="form-section-header" onclick="toggleSection('{{ group_key }}')">
+            <div class="fsh-left">
+              <span class="fsh-icon fsh-{{ group_key }}">
+                {% if group_key == 'patient_info' %}
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="5" r="3.5" stroke="currentColor" stroke-width="1.5"/><path d="M2 16c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                {% elif group_key == 'abdominal' %}
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M9 5v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                {% elif group_key == 'blood' %}
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2L5 9a4 4 0 108 0L9 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                {% elif group_key == 'urinary' %}
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="4" y="2" width="10" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M7 8h4M7 11h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                {% elif group_key == 'imaging' %}
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 11l2-3 2 2 3-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                {% elif group_key == 'scores' %}
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="2" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 6h6M6 9h6M6 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                {% endif %}
+              </span>
+              <span class="fsh-label">{{ group.label }}</span>
+              <span class="fsh-count">{{ group.fields|length }} champs</span>
+            </div>
+            <span class="fsh-chevron">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </button>
+
+          <div class="form-section-body">
+            <div class="fields-grid">
+              {% for field in group.fields %}
+              <div class="field {% if field.type == 'toggle' %}field-toggle{% endif %}">
+
+                {% if field.type == 'number' %}
+                  <label for="{{ field.name }}">{{ field.label }}
+                    {% if field.unit %}<span class="field-unit">{{ field.unit }}</span>{% endif %}
+                  </label>
+                  <input type="number" id="{{ field.name }}" name="{{ field.name }}"
+                         min="{{ field.min }}" max="{{ field.max }}" step="{{ field.step }}"
+                         placeholder="—" class="form-input">
+
+                {% elif field.type == 'select' %}
+                  <label for="{{ field.name }}">{{ field.label }}</label>
+                  <select id="{{ field.name }}" name="{{ field.name }}" class="form-input">
+                    {% for val, txt in field.options %}
+                      <option value="{{ val }}">{{ txt }}</option>
+                    {% endfor %}
+                  </select>
+
+                {% elif field.type == 'toggle' %}
+                  <label class="toggle-label" for="{{ field.name }}">
+                    <div class="toggle-switch">
+                      <input type="hidden" name="{{ field.name }}" value="0">
+                      <input type="checkbox" id="{{ field.name }}" name="{{ field.name }}" value="1"
+                             class="toggle-input" onchange="this.previousElementSibling.disabled=this.checked">
+                      <span class="toggle-slider"></span>
+                    </div>
+                    <span class="toggle-text">{{ field.label }}</span>
+                  </label>
+                {% endif %}
+
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+
+        <!-- Submit -->
+        <div class="form-submit">
+          <button type="submit" class="btn btn-primary btn-lg btn-submit" id="submitBtn">
+            <span class="btn-text">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm-1 11l-3-3 1.4-1.4L9 10.2l3.6-3.6L14 8l-5 5z" fill="currentColor"/></svg>
+              Analyser le patient
+            </span>
+            <span class="btn-loading" style="display:none">
+              <span class="spinner"></span> Analyse en cours…
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
 {% endblock %}

@@ -1,145 +1,280 @@
-"""Application Flask principale: formulaires, prédiction et rendu des résultats."""
+"""
+Flask Application — Pediatric Appendicitis Diagnosis
+=====================================================
+"""
 
 import os
 import sys
 import json
-import logging
-from datetime import datetime
-
+import secrets
 import numpy as np
 import pandas as pd
 import joblib
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_login import login_required, current_user
-from config import (
-    MODELS_DIR, DEFAULT_SECRET_KEY,
-    NUMERIC_FEATURES, BINARY_FEATURE_MAP, WBC_CRP_SMOOTHING,
-)
+import matplotlib
+matplotlib.use("Agg")
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, BASE_DIR)
+from flask import Flask, render_template, request, redirect, url_for
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", DEFAULT_SECRET_KEY)
+app.secret_key = secrets.token_hex(32)
 
-from auth import auth_bp, setup_login_manager, init_db, get_db
-from shap_utils import init_explainer, compute_shap_values
+# ── Paths ────────────────────────────────────────────────────────────────────
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+MODELS_DIR = os.path.join(BASE_DIR, "models")
+IMAGES_DIR = os.path.join(BASE_DIR, "app", "static", "images")
 
-setup_login_manager(app)
-app.register_blueprint(auth_bp)
-init_db()
-
+# ── Load model artifacts ─────────────────────────────────────────────────────
 model = joblib.load(os.path.join(MODELS_DIR, "best_model.pkl"))
 scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
-feature_names = joblib.load(os.path.join(MODELS_DIR, "feature_names.pkl"))
-explainer = init_explainer(model)
-logger.info("Application init OK | model=%s | features=%d", type(model).__name__, len(feature_names))
+feature_names = list(joblib.load(os.path.join(MODELS_DIR, "feature_names.pkl")))
+
+with open(os.path.join(MODELS_DIR, "metrics.json")) as f:
+    metrics_data = json.load(f)
+
+# ── Feature mappings ─────────────────────────────────────────────────────────
+NUMERIC_FEATURES = [
+    "Age", "BMI", "Height", "Weight", "Length_of_Stay",
+    "Alvarado_Score", "Paedriatic_Appendicitis_Score",
+    "Appendix_Diameter", "Body_Temperature",
+    "WBC_Count", "Neutrophil_Percentage", "Segmented_Neutrophils",
+    "RBC_Count", "Hemoglobin", "RDW", "Thrombocyte_Count", "CRP",
+]
+
+BINARY_FEATURES = [
+    "Migratory_Pain", "Lower_Right_Abd_Pain",
+    "Contralateral_Rebound_Tenderness", "Coughing_Pain",
+    "Nausea", "Loss_of_Appetite", "Neutrophilia",
+    "Dysuria", "Psoas_Sign", "Ipsilateral_Rebound_Tenderness",
+    "US_Performed", "Appendix_on_US", "Free_Fluids",
+    "Target_Sign", "Surrounding_Tissue_Reaction",
+    "Pathological_Lymph_Nodes", "Bowel_Wall_Thickening",
+    "Conglomerate_of_Bowel_Loops", "Ileus", "Coprostasis",
+    "Meteorism", "Enteritis",
+]
+
+CATEGORICAL_FEATURES = {
+    "Ketones_in_Urine": ["no", "++", "+++"],
+    "RBC_in_Urine": ["no", "++", "+++"],
+    "WBC_in_Urine": ["no", "++", "+++"],
+    "Stool": ["normal", "diarrhea", "constipation, diarrhea"],
+    "Peritonitis": ["no", "local"],
+    "Appendix_Wall_Layers": ["partially raised", "raised", "upset"],
+    "Appendicolith": ["yes", "suspected"],
+    "Perfusion": ["no", "present", "hypoperfused"],
+    "Perforation": ["yes", "suspected", "not excluded"],
+    "Appendicular_Abscess": ["yes", "suspected"],
+}
+
+# ── Form organisation by body region ─────────────────────────────────────────
+FEATURE_GROUPS = {
+    "patient_info": {
+        "label": "Informations Patient",
+        "icon": "user",
+        "fields": [
+            {"name": "Age", "label": "Âge", "unit": "ans", "type": "number",
+             "min": 0, "max": 18, "step": "0.1"},
+            {"name": "Sex", "label": "Sexe", "type": "select",
+             "options": [("", "—"), ("female", "Féminin"), ("male", "Masculin")]},
+            {"name": "Height", "label": "Taille", "unit": "cm", "type": "number",
+             "min": 50, "max": 200, "step": "0.1"},
+            {"name": "Weight", "label": "Poids", "unit": "kg", "type": "number",
+             "min": 3, "max": 150, "step": "0.1"},
+            {"name": "BMI", "label": "IMC", "unit": "kg/m²", "type": "number",
+             "min": 10, "max": 50, "step": "0.1"},
+            {"name": "Body_Temperature", "label": "Température", "unit": "°C",
+             "type": "number", "min": 35, "max": 42, "step": "0.1"},
+        ],
+    },
+    "abdominal": {
+        "label": "Symptômes Abdominaux",
+        "icon": "abdomen",
+        "fields": [
+            {"name": "Migratory_Pain", "label": "Douleur migratrice", "type": "toggle"},
+            {"name": "Lower_Right_Abd_Pain", "label": "Douleur fosse iliaque droite", "type": "toggle"},
+            {"name": "Contralateral_Rebound_Tenderness", "label": "Défense controlatérale", "type": "toggle"},
+            {"name": "Coughing_Pain", "label": "Douleur à la toux", "type": "toggle"},
+            {"name": "Nausea", "label": "Nausées", "type": "toggle"},
+            {"name": "Loss_of_Appetite", "label": "Perte d'appétit", "type": "toggle"},
+            {"name": "Peritonitis", "label": "Péritonite", "type": "select",
+             "options": [("", "Non évaluée"), ("no", "Absente"), ("local", "Locale")]},
+            {"name": "Psoas_Sign", "label": "Signe du psoas", "type": "toggle"},
+            {"name": "Ipsilateral_Rebound_Tenderness", "label": "Défense ipsilatérale", "type": "toggle"},
+            {"name": "Stool", "label": "Selles", "type": "select",
+             "options": [("", "—"), ("normal", "Normales"), ("diarrhea", "Diarrhée"),
+                         ("constipation, diarrhea", "Constipation / Diarrhée")]},
+        ],
+    },
+    "blood": {
+        "label": "Analyses Sanguines",
+        "icon": "blood",
+        "fields": [
+            {"name": "WBC_Count", "label": "Leucocytes (WBC)", "unit": "10³/µL",
+             "type": "number", "min": 0, "max": 50, "step": "0.01"},
+            {"name": "Neutrophil_Percentage", "label": "Neutrophiles", "unit": "%",
+             "type": "number", "min": 0, "max": 100, "step": "0.1"},
+            {"name": "Segmented_Neutrophils", "label": "Neutro. segmentés", "unit": "%",
+             "type": "number", "min": 0, "max": 100, "step": "0.1"},
+            {"name": "Neutrophilia", "label": "Neutrophilie", "type": "toggle"},
+            {"name": "RBC_Count", "label": "Globules rouges", "unit": "10⁶/µL",
+             "type": "number", "min": 0, "max": 10, "step": "0.01"},
+            {"name": "Hemoglobin", "label": "Hémoglobine", "unit": "g/dL",
+             "type": "number", "min": 0, "max": 20, "step": "0.1"},
+            {"name": "RDW", "label": "IDR (RDW)", "unit": "%",
+             "type": "number", "min": 0, "max": 30, "step": "0.1"},
+            {"name": "Thrombocyte_Count", "label": "Plaquettes", "unit": "10³/µL",
+             "type": "number", "min": 0, "max": 800, "step": "1"},
+            {"name": "CRP", "label": "CRP", "unit": "mg/L",
+             "type": "number", "min": 0, "max": 500, "step": "0.1"},
+        ],
+    },
+    "urinary": {
+        "label": "Analyses Urinaires",
+        "icon": "urine",
+        "fields": [
+            {"name": "Ketones_in_Urine", "label": "Cétones urinaires", "type": "select",
+             "options": [("", "—"), ("no", "Absent"), ("++", "++"), ("+++", "+++")]},
+            {"name": "RBC_in_Urine", "label": "Hématurie", "type": "select",
+             "options": [("", "—"), ("no", "Absent"), ("++", "++"), ("+++", "+++")]},
+            {"name": "WBC_in_Urine", "label": "Leucocyturie", "type": "select",
+             "options": [("", "—"), ("no", "Absent"), ("++", "++"), ("+++", "+++")]},
+            {"name": "Dysuria", "label": "Dysurie", "type": "toggle"},
+        ],
+    },
+    "imaging": {
+        "label": "Échographie",
+        "icon": "ultrasound",
+        "fields": [
+            {"name": "US_Performed", "label": "Échographie réalisée", "type": "toggle"},
+            {"name": "Appendix_on_US", "label": "Appendice visible", "type": "toggle"},
+            {"name": "Appendix_Diameter", "label": "Diamètre appendice", "unit": "mm",
+             "type": "number", "min": 0, "max": 30, "step": "0.1"},
+            {"name": "Free_Fluids", "label": "Liquide libre", "type": "toggle"},
+            {"name": "Appendix_Wall_Layers", "label": "Couches paroi", "type": "select",
+             "options": [("", "—"), ("partially raised", "Partiellement épaissies"),
+                         ("raised", "Épaissies"), ("upset", "Perturbées")]},
+            {"name": "Target_Sign", "label": "Signe de la cible", "type": "toggle"},
+            {"name": "Appendicolith", "label": "Appendicolithe", "type": "select",
+             "options": [("", "—"), ("yes", "Oui"), ("suspected", "Suspecté")]},
+            {"name": "Perfusion", "label": "Perfusion", "type": "select",
+             "options": [("", "—"), ("present", "Présente"), ("no", "Absente"),
+                         ("hypoperfused", "Hypoperfusion")]},
+            {"name": "Perforation", "label": "Perforation", "type": "select",
+             "options": [("", "—"), ("yes", "Oui"), ("suspected", "Suspectée"),
+                         ("not excluded", "Non exclue")]},
+            {"name": "Surrounding_Tissue_Reaction", "label": "Réaction péri-appendiculaire", "type": "toggle"},
+            {"name": "Appendicular_Abscess", "label": "Abcès appendiculaire", "type": "select",
+             "options": [("", "—"), ("yes", "Oui"), ("suspected", "Suspecté")]},
+            {"name": "Pathological_Lymph_Nodes", "label": "Ganglions pathologiques", "type": "toggle"},
+            {"name": "Bowel_Wall_Thickening", "label": "Épaississement paroi intestinale", "type": "toggle"},
+            {"name": "Ileus", "label": "Iléus", "type": "toggle"},
+            {"name": "Coprostasis", "label": "Coprostase", "type": "toggle"},
+            {"name": "Meteorism", "label": "Météorisme", "type": "toggle"},
+            {"name": "Enteritis", "label": "Entérite", "type": "toggle"},
+        ],
+    },
+    "scores": {
+        "label": "Scores Cliniques",
+        "icon": "score",
+        "fields": [
+            {"name": "Alvarado_Score", "label": "Score d'Alvarado", "type": "number",
+             "min": 0, "max": 10, "step": "1"},
+            {"name": "Paedriatic_Appendicitis_Score", "label": "Score PAS", "type": "number",
+             "min": 0, "max": 10, "step": "1"},
+            {"name": "Length_of_Stay", "label": "Durée de séjour", "unit": "jours",
+             "type": "number", "min": 0, "max": 60, "step": "1"},
+        ],
+    },
+}
 
 
-                                
-
-def build_feature_vector(form_data):
-    """Convert form data into the exact feature dictionary expected by the model."""
-    logger.debug("Building feature vector from %d form fields", len(form_data))
-    vec = {}
-    for col in NUMERIC_FEATURES:
-        val = form_data.get(col, "0")
-        vec[col] = float(val) if val else 0.0
-    vec["WBC_CRP_Ratio"] = vec["WBC_Count"] / (vec["CRP"] + WBC_CRP_SMOOTHING)
-    for form_key, (feat, positive) in BINARY_FEATURE_MAP.items():
-        vec[feat] = 1 if form_data.get(form_key, "").lower() == positive else 0
-    # Keep the same one-hot convention as training.
-    perit = form_data.get("Peritonitis", "no").lower()
-    vec["Peritonitis_local"] = 1 if perit == "local" else 0
-    vec["Peritonitis_no"] = 1 if perit == "no" else 0
-    logger.debug("Feature vector built with %d keys", len(vec))
-    return vec
-
-
-def prepare_input(feature_vector):
-    """Align one sample with training columns and apply the saved scaler."""
-    df = pd.DataFrame([feature_vector])
-    missing = 0
-    for col in feature_names:
-        if col not in df.columns:
-            df[col] = 0
-            missing += 1
-    df = df[feature_names]
-    logger.debug("Input prepared | shape=%s | missing_filled=%d", df.shape, missing)
-    return scaler.transform(df.values)
-
-
-                
+# ── Routes ───────────────────────────────────────────────────────────────────
 
 @app.route("/")
-def home():
-    return render_template("index.html")
+def index():
+    best = metrics_data.get("best_model", "")
+    best_metrics = metrics_data.get("models", {}).get(best, {})
+    return render_template("index.html", best_model=best, metrics=best_metrics,
+                           all_models=metrics_data.get("models", {}))
 
 
 @app.route("/diagnosis")
-@login_required
 def diagnosis():
-    return render_template("diagnosis.html")
+    return render_template("diagnosis.html", feature_groups=FEATURE_GROUPS)
 
 
 @app.route("/predict", methods=["POST"])
-@login_required
 def predict():
-    """Run model inference, compute SHAP explanation, and persist history."""
+    input_dict = {f: 0.0 for f in feature_names}
+
+    # ── Numeric features ─────────────────────────────────────────────────
+    for feat in NUMERIC_FEATURES:
+        val = request.form.get(feat, "")
+        if val:
+            try:
+                input_dict[feat] = float(val)
+            except ValueError:
+                pass
+
+    # ── Binary features (toggle → <feature>_yes = 1) ────────────────────
+    for feat in BINARY_FEATURES:
+        if request.form.get(feat) == "1":
+            col = feat + "_yes"
+            if col in input_dict:
+                input_dict[col] = 1.0
+
+    # ── Sex ──────────────────────────────────────────────────────────────
+    if request.form.get("Sex") == "male":
+        if "Sex_male" in input_dict:
+            input_dict["Sex_male"] = 1.0
+
+    # ── Categorical features (select → one-hot) ─────────────────────────
+    for feat, options in CATEGORICAL_FEATURES.items():
+        val = request.form.get(feat, "")
+        if val:
+            col = feat + "_" + val
+            if col in input_dict:
+                input_dict[col] = 1.0
+
+    # ── Build DataFrame & scale ──────────────────────────────────────────
+    df_input = pd.DataFrame([input_dict])[feature_names]
+    X_scaled = scaler.transform(df_input)
+
+    # ── Predict ──────────────────────────────────────────────────────────
+    y_prob = model.predict_proba(X_scaled)[0]
+    prediction = int(y_prob[1] >= 0.5)
+    confidence = float(y_prob[1]) if prediction == 1 else float(y_prob[0])
+    appendicitis_prob = float(y_prob[1])
+
+    # ── SHAP explanation ─────────────────────────────────────────────────
+    shap_available = False
     try:
-        form_data = request.form.to_dict()
-        logger.info("Predict request | user_id=%s | form_fields=%d", current_user.id, len(form_data))
-        vec = build_feature_vector(form_data)
-        X_scaled = prepare_input(vec)
-
-        prediction = int(model.predict(X_scaled)[0])
-        proba = model.predict_proba(X_scaled)[0]
-        probability = float(proba[1])
-        confidence = float(max(proba))
-        logger.info(
-            "Prediction complete | user_id=%s | pred=%d | proba=%.4f | confidence=%.4f",
-            current_user.id,
-            prediction,
-            probability,
-            confidence,
-        )
-
-        shap_values = compute_shap_values(X_scaled, model, feature_names, explainer)
-
-        # Store the prediction payload for user history and admin review.
-        conn = get_db()
-        cursor = conn.execute(
-            "INSERT INTO history (user_id, timestamp, age, sex, prediction, confidence, probability, form_data, patient_first_name, patient_last_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (current_user.id,
-             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-             form_data.get("Age", ""),
-             form_data.get("Sex", ""),
-             prediction,
-             confidence,
-             probability,
-             json.dumps(form_data),
-             form_data.get("patient_first_name", "").strip(),
-             form_data.get("patient_last_name", "").strip())
-        )
-        conn.commit()
-        conn.close()
-        logger.info("Prediction persisted | user_id=%s | history_id=%s", current_user.id, cursor.lastrowid)
-
-        return render_template("result.html",
-                               prediction=prediction,
-                               probability=probability,
-                               confidence=confidence,
-                               shap_values=shap_values,
-                               form_data=form_data,
-                               patient_name=f"{form_data.get('patient_first_name','').strip()} {form_data.get('patient_last_name','').strip()}".strip())
+        from src.evaluate_model import generate_single_prediction_shap
+        os.makedirs(IMAGES_DIR, exist_ok=True)
+        shap_path = os.path.join(IMAGES_DIR, "shap_prediction.png")
+        generate_single_prediction_shap(model, scaler, feature_names,
+                                        input_dict, shap_path)
+        shap_available = True
     except Exception as e:
-        logger.error("Prediction error: %s", e, exc_info=True)
-        flash(f"Error: {e}", "error")
-        return redirect(url_for("diagnosis"))
+        print(f"SHAP generation skipped: {e}")
 
+    best = metrics_data.get("best_model", "")
+    best_metrics = metrics_data.get("models", {}).get(best, {})
+
+    return render_template(
+        "results.html",
+        prediction=prediction,
+        confidence=confidence,
+        appendicitis_prob=appendicitis_prob,
+        healthy_prob=float(y_prob[0]),
+        best_model=best,
+        metrics=best_metrics,
+        shap_available=shap_available,
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)

@@ -1,411 +1,355 @@
-/* ═══════════════════════════════════════════════════════════
-   PediAppend – main.js
-   ═══════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   AppendixAI — Main JavaScript
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 document.addEventListener('DOMContentLoaded', () => {
-
-    /* ── Navbar scroll ── */
-    const nav = document.querySelector('.navbar');
-    if (nav) {
-        window.addEventListener('scroll', () => {
-            nav.classList.toggle('scrolled', window.scrollY > 20);
-        });
-        nav.classList.toggle('scrolled', window.scrollY > 20);
-    }
-
-    /* ── Smooth scroll for anchors (non-landing pages only) ── */
-    document.querySelectorAll('a[href^="#"]').forEach(a => {
-        a.addEventListener('click', e => {
-            if (a.hasAttribute('data-goto')) return; // handled by slide logic
-            const t = document.querySelector(a.getAttribute('href'));
-            if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-        });
-    });
-
-    /* ── Intersection Observer (animate-in) ── */
-    const io = new IntersectionObserver(entries => {
-        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
-    }, { threshold: 0.08 });
-    document.querySelectorAll('.animate-in').forEach(el => io.observe(el));
-
-    /* ── Stat count-up animation ── */
-    const statObserver = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
-            entry.target.querySelectorAll('.stat-value[data-count]').forEach(el => {
-                const target = parseFloat(el.dataset.count);
-                const duration = 1500;
-                const start = performance.now();
-                function tick(now) {
-                    const progress = Math.min((now - start) / duration, 1);
-                    const eased = 1 - Math.pow(1 - progress, 3);
-                    el.textContent = (target * eased).toFixed(1);
-                    if (progress < 1) requestAnimationFrame(tick);
-                }
-                requestAnimationFrame(tick);
-            });
-            statObserver.unobserve(entry.target);
-        });
-    }, { threshold: 0.3 });
-    document.querySelectorAll('.stats-grid').forEach(el => statObserver.observe(el));
-
-    /* ── Landing page slide navigation ── */
-    const sideSteps = document.querySelectorAll('.side-step');
-    const landingSections = document.querySelectorAll('.landing-step');
-    let currentSlide = 0;
-    let slideAnimating = false;
-
-    function goToSlide(index) {
-        if (slideAnimating || index === currentSlide || index < 0 || index >= landingSections.length) return;
-        slideAnimating = true;
-        const goingDown = index > currentSlide;
-        const prev = landingSections[currentSlide];
-        const next = landingSections[index];
-
-        // Exit current slide in opposite direction
-        prev.classList.remove('active');
-        prev.classList.add(goingDown ? 'slide-exit-up' : 'slide-exit-down');
-
-        // Prepare entry direction
-        next.style.transition = 'none';
-        next.style.transform = goingDown ? 'translateY(40px)' : 'translateY(-40px)';
-        next.style.opacity = '0';
-        next.classList.add('active');
-
-        // Force reflow then animate in
-        void next.offsetHeight;
-        next.style.transition = '';
-        next.style.transform = '';
-        next.style.opacity = '';
-
-        // Update side dots
-        sideSteps.forEach((s, i) => s.classList.toggle('active', i === index));
-
-        // Trigger animate-in for new slide's elements
-        next.querySelectorAll('.animate-in').forEach(el => el.classList.add('visible'));
-
-        // Trigger stat count-up if entering stats step
-        if (next.querySelector('.stats-grid')) {
-            next.querySelectorAll('.stat-value[data-count]').forEach(el => {
-                const target = parseFloat(el.dataset.count);
-                const duration = 1500, start = performance.now();
-                function tick(now) {
-                    const progress = Math.min((now - start) / duration, 1);
-                    const eased = 1 - Math.pow(1 - progress, 3);
-                    el.textContent = (target * eased).toFixed(1);
-                    if (progress < 1) requestAnimationFrame(tick);
-                }
-                requestAnimationFrame(tick);
-            });
-        }
-
-        currentSlide = index;
-        setTimeout(() => {
-            prev.classList.remove('slide-exit-up', 'slide-exit-down');
-            slideAnimating = false;
-        }, 550);
-    }
-
-    if (landingSections.length) {
-        // Side dot clicks
-        sideSteps.forEach(s => {
-            s.addEventListener('click', e => {
-                e.preventDefault();
-                goToSlide(parseInt(s.dataset.goto));
-            });
-        });
-
-        // Arrow button clicks
-        document.querySelectorAll('.slide-arrow-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (btn.dataset.dir === 'next') goToSlide(currentSlide + 1);
-                else goToSlide(currentSlide - 1);
-            });
-        });
-
-        // data-goto links (e.g. "How It Works" button in hero)
-        document.querySelectorAll('[data-goto]').forEach(el => {
-            if (el.classList.contains('side-step') || el.classList.contains('slide-arrow-btn')) return;
-            el.addEventListener('click', e => {
-                e.preventDefault();
-                goToSlide(parseInt(el.dataset.goto));
-            });
-        });
-
-        // Keyboard navigation
-        document.addEventListener('keydown', e => {
-            if (!document.querySelector('.slides-viewport')) return;
-            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); goToSlide(currentSlide + 1); }
-            if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); goToSlide(currentSlide - 1); }
-        });
-
-        // Mouse wheel navigation (properly throttled)
-        const viewport = document.getElementById('slidesViewport');
-        let wheelCooldown = false;
-        if (viewport) {
-            viewport.addEventListener('wheel', e => {
-                e.preventDefault();
-                if (wheelCooldown || slideAnimating) return;
-                wheelCooldown = true;
-                if (e.deltaY > 0) goToSlide(currentSlide + 1);
-                else goToSlide(currentSlide - 1);
-                setTimeout(() => { wheelCooldown = false; }, 800);
-            }, { passive: false });
-        }
-
-        // Init: make sure first slide is visible
-        landingSections[0].classList.add('active');
-        landingSections[0].querySelectorAll('.animate-in').forEach(el => el.classList.add('visible'));
-    }
-
-    /* ── Particles ── */
-    const pc = document.getElementById('particles');
-    if (pc) {
-        for (let i = 0; i < 20; i++) {
-            const d = document.createElement('span');
-            d.className = 'particle';
-            d.style.left = Math.random() * 100 + '%';
-            d.style.top = Math.random() * 100 + '%';
-            d.style.animationDelay = Math.random() * 6 + 's';
-            d.style.animationDuration = (4 + Math.random() * 6) + 's';
-            d.style.width = d.style.height = (2 + Math.random() * 4) + 'px';
-            pc.appendChild(d);
-        }
-    }
-
-    /* ═══ MULTI-STEP FORM ═══ */
-    const steps = document.querySelectorAll('.form-step');
-    const nextBtn = document.getElementById('nextBtn');
-    const prevBtn = document.getElementById('prevBtn');
-    let currentStep = 0;
-
-    function showStep(n) {
-        steps.forEach((s, i) => s.style.display = i === n ? '' : 'none');
-        if (prevBtn) prevBtn.style.visibility = n === 0 ? 'hidden' : 'visible';
-        if (nextBtn) {
-            if (n === steps.length - 1) {
-                nextBtn.innerHTML = '&#129657; Analyze &rarr;';
-                nextBtn.classList.add('submit-mode');
-            } else {
-                nextBtn.innerHTML = 'Next &rarr;';
-                nextBtn.classList.remove('submit-mode');
-            }
-        }
-        /* Update step indicators */
-        document.querySelectorAll('.step-circle').forEach((c, i) => {
-            c.classList.remove('active', 'completed', 'pending');
-            if (i < n) c.classList.add('completed');
-            else if (i === n) c.classList.add('active');
-            else c.classList.add('pending');
-        });
-        document.querySelectorAll('.step-label-text').forEach((l, i) => {
-            l.style.color = i <= n ? 'var(--slate-800)' : 'var(--slate-400)';
-        });
-        /* Progress bar */
-        const fill = document.querySelector('.step-progress-fill');
-        if (fill) fill.style.width = ((n + 1) / steps.length * 100) + '%';
-        /* Connector fills */
-        document.querySelectorAll('.step-connector-fill').forEach((cf, i) => {
-            cf.style.width = i < n ? '100%' : '0%';
-        });
-    }
-
-    function validateStep(n) {
-        const step = steps[n];
-        if (!step) return true;
-        const required = step.querySelectorAll('[required]');
-        let ok = true;
-        required.forEach(el => {
-            const g = el.closest('.form-group') || el.closest('.bmi-card') || el.parentElement;
-            if (!el.value) { g.classList.add('has-error'); ok = false; }
-            else g.classList.remove('has-error');
-        });
-        /* Sex field */
-        const sexInput = step.querySelector('#Sex');
-        if (sexInput && !sexInput.value) {
-            const g = sexInput.closest('.form-group') || sexInput.parentElement;
-            g.classList.add('has-error');
-            ok = false;
-        }
-        return ok;
-    }
-
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            if (!validateStep(currentStep)) return;
-            if (currentStep === steps.length - 1) {
-                document.getElementById('diagnosisForm').submit();
-            } else {
-                currentStep++;
-                showStep(currentStep);
-                window.scrollTo({ top: document.querySelector('.form-section').offsetTop - 100, behavior: 'smooth' });
-            }
-        });
-    }
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            if (currentStep > 0) { currentStep--; showStep(currentStep); }
-        });
-    }
-    if (steps.length) showStep(0);
-
-    /* ── Age calc from dates ── */
-    const dobEl = document.getElementById('DateOfBirth');
-    const examEl = document.getElementById('ExamDate');
-    const ageEl = document.getElementById('Age');
-    const ageDisp = document.getElementById('ageDisplay');
-    const ageFill = document.getElementById('ageFill');
-    const ageCard = document.getElementById('ageCard');
-
-    function calcAge() {
-        if (!dobEl?.value || !examEl?.value) return;
-        const dob = new Date(dobEl.value);
-        const exam = new Date(examEl.value);
-        if (exam <= dob) return;
-        const diffMs = exam - dob;
-        const age = diffMs / (365.25 * 24 * 60 * 60 * 1000);
-        const val = age.toFixed(1);
-        if (ageDisp) ageDisp.textContent = val;
-        if (ageFill) ageFill.style.width = Math.min(age / 18 * 100, 100) + '%';
-        if (ageCard) ageCard.classList.add('active');
-        const ageErrorEl = document.getElementById('ageError');
-        if (age > 18) {
-            if (ageDisp) ageDisp.style.color = 'var(--rose-500, #f43f5e)';
-            if (ageErrorEl) ageErrorEl.style.display = 'block';
-            if (ageEl) ageEl.value = '';
-        } else {
-            if (ageDisp) ageDisp.style.color = '';
-            if (ageErrorEl) ageErrorEl.style.display = 'none';
-            if (ageEl) ageEl.value = val;
-            const g = ageEl?.closest('.form-group') || ageCard;
-            if (g) g.classList.remove('has-error');
-        }
-    }
-    if (dobEl) dobEl.addEventListener('input', calcAge);
-    if (examEl) {
-        examEl.addEventListener('input', calcAge);
-        examEl.value = new Date().toISOString().split('T')[0];
-    }
-
-    /* ── BMI calc ── */
-    const hEl = document.getElementById('Height');
-    const wEl = document.getElementById('Weight');
-    const bmiEl = document.getElementById('BMI');
-    const bmiDisp = document.getElementById('bmiDisplay');
-    const bmiFill = document.getElementById('bmiFill');
-    const bmiCard = document.getElementById('bmiCard');
-
-    function calcBMI() {
-        const h = parseFloat(hEl?.value);
-        const w = parseFloat(wEl?.value);
-        if (h > 0 && w > 0) {
-            const bmi = w / ((h / 100) ** 2);
-            const val = bmi.toFixed(1);
-            if (bmiEl) bmiEl.value = val;
-            if (bmiDisp) bmiDisp.textContent = val;
-            if (bmiFill) bmiFill.style.width = Math.min(bmi / 40 * 100, 100) + '%';
-            if (bmiCard) bmiCard.classList.add('active');
-        }
-    }
-    if (hEl) hEl.addEventListener('input', calcBMI);
-    if (wEl) wEl.addEventListener('input', calcBMI);
-
-    /* ── Sex toggle ── */
-    window.selectSex = function(btn) {
-        document.querySelectorAll('.sex-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        const sexInput = document.getElementById('Sex');
-        if (sexInput) sexInput.value = btn.dataset.value;
-        const g = sexInput?.closest('.form-group') || sexInput?.parentElement;
-        if (g) g.classList.remove('has-error');
-    };
-
-    /* ── Symptom toggles ── */
-    document.querySelectorAll('.symptom-toggle').forEach(t => {
-        const sw = t.querySelector('.switch');
-        const inp = t.querySelector('input[type=hidden]');
-        if (!sw || !inp) return;
-        t.addEventListener('click', e => {
-            e.preventDefault();
-            const on = sw.classList.toggle('on');
-            inp.value = on ? 'yes' : 'no';
-        });
-    });
-
-    /* ── US Performed toggle ── */
-    const usSelect = document.getElementById('US_Performed');
-    const usFields = document.getElementById('usFields');
-    if (usSelect && usFields) {
-        function toggleUS() { usFields.classList.toggle('visible', usSelect.value === 'yes'); }
-        usSelect.addEventListener('change', toggleUS);
-        toggleUS();
-    }
-
-    /* ═══ RESULT PAGE ANIMATIONS ═══ */
-
-    /* Ring animation */
-    const ringProgress = document.querySelector('.ring-progress');
-    const ringPct = document.querySelector('.ring-pct');
-    if (ringProgress) {
-        const r = 90;
-        const c = 2 * Math.PI * r;
-        const pct = parseFloat(ringProgress.dataset.pct) || 0;
-        ringProgress.style.strokeDasharray = c;
-        ringProgress.style.strokeDashoffset = c;
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                ringProgress.style.transition = 'stroke-dashoffset 1.5s ease-out';
-                ringProgress.style.strokeDashoffset = c - (pct / 100) * c;
-            }, 300);
-        });
-        /* Animate number */
-        if (ringPct) {
-            const target = parseFloat(ringPct.dataset.value) || 0;
-            let cur = 0;
-            const step = target / 60;
-            const timer = setInterval(() => {
-                cur += step;
-                if (cur >= target) { cur = target; clearInterval(timer); }
-                ringPct.textContent = cur.toFixed(1);
-            }, 25);
-        }
-    }
-
-    /* SHAP bar animation */
-    document.querySelectorAll('.shap-fill').forEach(bar => {
-        const w = bar.dataset.width;
-        if (w) {
-            setTimeout(() => { bar.style.width = w + '%'; }, 500);
-        }
-    });
-
-    /* ═══ HISTORY PAGE ═══ */
-    window.deleteRecord = function(id) {
-        if (!confirm('Supprimer cet enregistrement ?')) return;
-        fetch('/history/' + encodeURIComponent(id), { method: 'DELETE' })
-            .then(r => { if (r.ok) location.reload(); });
-    };
-
-    window.clearHistory = function() {
-        if (!confirm('Effacer tout l\'historique ? Cette action est irréversible.')) return;
-        fetch('/history/clear', { method: 'POST' })
-            .then(r => { if (r.ok) location.reload(); });
-    };
-
-    window.filterRecords = function() {
-        const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
-        const f = document.getElementById('filterResult')?.value || 'all';
-        document.querySelectorAll('#historyTable tbody tr').forEach(tr => {
-            const text = tr.textContent.toLowerCase();
-            const result = tr.dataset.result;
-            const matchText = !q || text.includes(q);
-            const matchFilter = f === 'all' || result === f;
-            tr.style.display = matchText && matchFilter ? '' : 'none';
-        });
-    };
-
-    /* Auto-dismiss flash */
-    document.querySelectorAll('.flash-msg').forEach(m => {
-        m.style.transition = 'opacity 0.4s, transform 0.4s';
-        setTimeout(() => { m.style.opacity = '0'; m.style.transform = 'translateY(-10px)'; setTimeout(() => m.remove(), 400); }, 3000);
-    });
+  initNavbar();
+  initScrollReveal();
+  initCounters();
+  initBodyDiagram();
+  initFormProgress();
+  initFormSubmit();
+  initSymptomMarkers();
 });
+
+/* ── Navbar scroll effect ──────────────────────────────────────────────── */
+function initNavbar() {
+  const nav = document.getElementById('navbar');
+  const toggle = document.getElementById('navToggle');
+  const links = document.getElementById('navLinks');
+
+  if (!nav) return;
+
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 50);
+  }, { passive: true });
+
+  if (toggle && links) {
+    toggle.addEventListener('click', () => {
+      links.classList.toggle('open');
+    });
+  }
+}
+
+/* ── Scroll reveal (IntersectionObserver) ──────────────────────────────── */
+function initScrollReveal() {
+  const reveals = document.querySelectorAll('.reveal');
+  if (!reveals.length) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+  reveals.forEach(el => observer.observe(el));
+}
+
+/* ── Animated counters ─────────────────────────────────────────────────── */
+function initCounters() {
+  const counters = document.querySelectorAll('.stat-value[data-target]');
+  if (!counters.length) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateCounter(entry.target);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  counters.forEach(el => observer.observe(el));
+}
+
+function animateCounter(el) {
+  const target = parseFloat(el.dataset.target);
+  const isFloat = target % 1 !== 0;
+  const duration = 2000;
+  const start = performance.now();
+
+  function update(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    const current = eased * target;
+
+    el.textContent = isFloat ? current.toFixed(1) : Math.round(current);
+
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    }
+  }
+
+  requestAnimationFrame(update);
+}
+
+/* ── Body diagram interactions ─────────────────────────────────────────── */
+function initBodyDiagram() {
+  const zones = document.querySelectorAll('.body-zone');
+  if (!zones.length) return;
+
+  zones.forEach(zone => {
+    zone.addEventListener('click', () => {
+      const target = zone.dataset.target;
+      if (!target) return;
+
+      // Activate zone
+      zones.forEach(z => z.classList.remove('active'));
+      zone.classList.add('active');
+
+      // Open + highlight section
+      const section = document.getElementById('section-' + target);
+      if (section) {
+        // Close other sections
+        document.querySelectorAll('.form-section').forEach(s => {
+          if (s !== section) s.classList.remove('highlight');
+        });
+
+        // Open and scroll
+        if (!section.classList.contains('open')) {
+          toggleSection(target);
+        }
+
+        section.classList.add('highlight');
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Remove highlight after a moment
+        setTimeout(() => section.classList.remove('highlight'), 2000);
+      }
+    });
+  });
+}
+
+/* ── Toggle form sections ──────────────────────────────────────────────── */
+function toggleSection(key) {
+  const section = document.getElementById('section-' + key);
+  if (!section) return;
+  section.classList.toggle('open');
+}
+// Make globally available for onclick
+window.toggleSection = toggleSection;
+
+/* ── Form progress tracking ────────────────────────────────────────────── */
+function initFormProgress() {
+  const form = document.getElementById('diagnosisForm');
+  if (!form) return;
+
+  const bar = document.getElementById('formProgress');
+  const text = document.getElementById('formProgressText');
+  if (!bar || !text) return;
+
+  function updateProgress() {
+    const inputs = form.querySelectorAll('input[type="number"], select');
+    const toggles = form.querySelectorAll('.toggle-input');
+    let filled = 0;
+    let total = inputs.length;
+
+    inputs.forEach(input => {
+      if (input.type === 'number' && input.value !== '') filled++;
+      if (input.tagName === 'SELECT' && input.value !== '') filled++;
+    });
+    // Toggles count as filled if checked
+    toggles.forEach(t => { if (t.checked) filled++; });
+    total += toggles.length;
+
+    const pct = total > 0 ? Math.round((filled / total) * 100) : 0;
+    bar.style.width = pct + '%';
+    text.textContent = pct + '%';
+  }
+
+  form.addEventListener('input', updateProgress);
+  form.addEventListener('change', updateProgress);
+  updateProgress();
+}
+
+/* ── Form submit loading state ─────────────────────────────────────────── */
+function initFormSubmit() {
+  const form = document.getElementById('diagnosisForm');
+  const btn = document.getElementById('submitBtn');
+  if (!form || !btn) return;
+
+  form.addEventListener('submit', () => {
+    const text = btn.querySelector('.btn-text');
+    const loading = btn.querySelector('.btn-loading');
+    if (text) text.style.display = 'none';
+    if (loading) loading.style.display = 'flex';
+    btn.disabled = true;
+    btn.style.opacity = '.7';
+  });
+}
+
+/* ── Smooth scroll for anchor links ────────────────────────────────────── */
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('a[href^="#"]');
+  if (!link) return;
+
+  e.preventDefault();
+  const target = document.querySelector(link.getAttribute('href'));
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SYMPTOM MARKERS — Red dots on body image
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const symptomZoneMapping = {
+  // Patient info (head — center ~100, y ~35-70)
+  'Age':              { zone: 'patient_info', x: 100, y: 35, label: 'Âge' },
+  'Sex':              { zone: 'patient_info', x: 88, y: 48, label: 'Sexe' },
+  'Height':           { zone: 'patient_info', x: 112, y: 40, label: 'Taille' },
+  'Weight':           { zone: 'patient_info', x: 85, y: 60, label: 'Poids' },
+  'BMI':              { zone: 'patient_info', x: 115, y: 55, label: 'IMC' },
+  'Body_Temperature': { zone: 'patient_info', x: 100, y: 68, label: 'Température' },
+
+  // Blood (thorax — center ~100, y ~105-150)
+  'WBC_Count':             { zone: 'blood', x: 88, y: 110, label: 'Leucocytes' },
+  'Neutrophil_Percentage': { zone: 'blood', x: 112, y: 115, label: 'Neutrophiles' },
+  'Segmented_Neutrophils': { zone: 'blood', x: 85, y: 125, label: 'N. segmentés' },
+  'Neutrophilia':          { zone: 'blood', x: 115, y: 130, label: 'Neutrophilie' },
+  'RBC_Count':             { zone: 'blood', x: 90, y: 140, label: 'Globules rouges' },
+  'Hemoglobin':            { zone: 'blood', x: 110, y: 142, label: 'Hémoglobine' },
+  'RDW':                   { zone: 'blood', x: 100, y: 148, label: 'IDR' },
+  'Thrombocyte_Count':     { zone: 'blood', x: 95, y: 105, label: 'Plaquettes' },
+  'CRP':                   { zone: 'blood', x: 105, y: 152, label: 'CRP' },
+
+  // Abdominal (center ~100, y ~170-215)
+  'Migratory_Pain':                    { zone: 'abdominal', x: 100, y: 172, label: 'Douleur migratrice' },
+  'Lower_Right_Abd_Pain':              { zone: 'abdominal', x: 118, y: 200, label: 'Douleur FID' },
+  'Contralateral_Rebound_Tenderness':  { zone: 'abdominal', x: 82, y: 195, label: 'Défense controlatérale' },
+  'Coughing_Pain':                     { zone: 'abdominal', x: 100, y: 182, label: 'Douleur toux' },
+  'Nausea':                            { zone: 'abdominal', x: 90, y: 177, label: 'Nausées' },
+  'Loss_of_Appetite':                  { zone: 'abdominal', x: 110, y: 185, label: 'Anorexie' },
+  'Peritonitis':                       { zone: 'abdominal', x: 100, y: 210, label: 'Péritonite' },
+  'Psoas_Sign':                        { zone: 'abdominal', x: 120, y: 205, label: 'Signe psoas' },
+  'Ipsilateral_Rebound_Tenderness':    { zone: 'abdominal', x: 80, y: 205, label: 'Défense ipsilatérale' },
+  'Stool':                             { zone: 'abdominal', x: 100, y: 218, label: 'Selles' },
+
+  // Urinary (center ~100, y ~228-250)
+  'Ketones_in_Urine': { zone: 'urinary', x: 93, y: 230, label: 'Cétones' },
+  'RBC_in_Urine':     { zone: 'urinary', x: 107, y: 235, label: 'Hématurie' },
+  'WBC_in_Urine':     { zone: 'urinary', x: 95, y: 244, label: 'Leucocyturie' },
+  'Dysuria':          { zone: 'urinary', x: 108, y: 248, label: 'Dysurie' },
+
+  // Imaging — echo (left arm area, x ~35-50, y ~140-210)
+  'US_Performed':                  { zone: 'imaging', x: 42, y: 145, label: 'Échographie' },
+  'Appendix_on_US':                { zone: 'imaging', x: 38, y: 155, label: 'Appendice visible' },
+  'Appendix_Diameter':             { zone: 'imaging', x: 44, y: 165, label: 'Diamètre' },
+  'Free_Fluids':                   { zone: 'imaging', x: 36, y: 175, label: 'Liquide libre' },
+  'Appendix_Wall_Layers':          { zone: 'imaging', x: 42, y: 185, label: 'Paroi' },
+  'Target_Sign':                   { zone: 'imaging', x: 38, y: 195, label: 'Cible' },
+  'Appendicolith':                 { zone: 'imaging', x: 44, y: 140, label: 'Appendicolithe' },
+  'Perfusion':                     { zone: 'imaging', x: 36, y: 160, label: 'Perfusion' },
+  'Perforation':                   { zone: 'imaging', x: 42, y: 170, label: 'Perforation' },
+  'Surrounding_Tissue_Reaction':   { zone: 'imaging', x: 38, y: 180, label: 'Réaction tissulaire' },
+  'Appendicular_Abscess':          { zone: 'imaging', x: 44, y: 190, label: 'Abcès' },
+  'Pathological_Lymph_Nodes':      { zone: 'imaging', x: 36, y: 200, label: 'Ganglions' },
+  'Bowel_Wall_Thickening':         { zone: 'imaging', x: 42, y: 150, label: 'Paroi intestinale' },
+  'Ileus':                         { zone: 'imaging', x: 38, y: 168, label: 'Iléus' },
+  'Coprostasis':                   { zone: 'imaging', x: 44, y: 205, label: 'Coprostase' },
+  'Meteorism':                     { zone: 'imaging', x: 36, y: 135, label: 'Météorisme' },
+  'Enteritis':                     { zone: 'imaging', x: 42, y: 130, label: 'Entérite' },
+
+  // Scores (right arm area, x ~150-165, y ~140-200)
+  'Alvarado_Score':                { zone: 'scores', x: 158, y: 165, label: 'Alvarado' },
+  'Paedriatic_Appendicitis_Score': { zone: 'scores', x: 155, y: 180, label: 'PAS' },
+  'Length_of_Stay':                { zone: 'scores', x: 160, y: 195, label: 'Séjour' },
+};
+
+function initSymptomMarkers() {
+  const form = document.getElementById('diagnosisForm');
+  if (!form) return;
+
+  const inputs = form.querySelectorAll('input, select, textarea');
+  inputs.forEach(input => {
+    input.addEventListener('change', () => updateSymptomMarker(input));
+    input.addEventListener('input', () => updateSymptomMarker(input));
+  });
+  inputs.forEach(input => updateSymptomMarker(input));
+}
+
+function updateSymptomMarker(input) {
+  const fieldName = input.name;
+  const mapping = symptomZoneMapping[fieldName];
+  if (!mapping) return;
+
+  const container = document.getElementById('symptomMarkersContainer');
+  if (!container) return;
+
+  const markerId = 'marker-' + fieldName;
+  let marker = document.getElementById(markerId);
+  const isActive = isFieldActive(input);
+
+  if (isActive) {
+    if (!marker) {
+      marker = createMarkerElement(fieldName, mapping);
+      container.appendChild(marker);
+      setTimeout(() => marker.classList.add('active'), 10);
+    }
+  } else {
+    if (marker) {
+      marker.classList.remove('active');
+      setTimeout(() => marker.remove(), 300);
+    }
+  }
+  updateZoneSymptomCount(mapping.zone);
+}
+
+function isFieldActive(input) {
+  if (input.type === 'checkbox') return input.checked;
+  if (input.type === 'hidden') return false;
+  if (input.tagName === 'SELECT') {
+    const v = input.value;
+    return v !== '' && v !== '0' && v !== 'no' && v !== 'none' && v !== 'normal';
+  }
+  if (input.type === 'number') return input.value !== '' && parseFloat(input.value) > 0;
+  return input.value.trim() !== '';
+}
+
+function createMarkerElement(fieldName, mapping) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const g = document.createElementNS(NS, 'g');
+  g.setAttribute('id', 'marker-' + fieldName);
+  g.setAttribute('class', 'symptom-marker');
+  g.setAttribute('transform', 'translate(' + mapping.x + ',' + mapping.y + ')');
+
+  const pulse = document.createElementNS(NS, 'circle');
+  pulse.setAttribute('r', '6');
+  pulse.setAttribute('class', 'marker-pulse');
+  g.appendChild(pulse);
+
+  const dot = document.createElementNS(NS, 'circle');
+  dot.setAttribute('r', '3');
+  dot.setAttribute('class', 'marker-dot');
+  g.appendChild(dot);
+
+  const title = document.createElementNS(NS, 'title');
+  title.textContent = mapping.label;
+  g.appendChild(title);
+
+  return g;
+}
+
+function updateZoneSymptomCount(zoneName) {
+  let count = 0;
+  Object.entries(symptomZoneMapping).forEach(([fn, m]) => {
+    if (m.zone === zoneName) {
+      const marker = document.getElementById('marker-' + fn);
+      if (marker && marker.classList.contains('active')) count++;
+    }
+  });
+
+  document.querySelectorAll('.body-zone[data-target="' + zoneName + '"]').forEach(z => {
+    z.classList.toggle('has-symptoms', count > 0);
+  });
+  document.querySelectorAll('.legend-pill[data-target="' + zoneName + '"]').forEach(p => {
+    p.classList.toggle('has-symptoms', count > 0);
+    if (count > 0) p.setAttribute('title', count + ' symptôme(s)');
+    else p.removeAttribute('title');
+  });
+}

@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Résultat{% endblock %}
+
+{% block content %}
+<section class="results-hero">
+  <div class="container">
+    <span class="section-badge">Résultat de l'analyse</span>
+  </div>
+</section>
+
+<section class="results-section">
+  <div class="container results-grid">
+
+    <!-- ═══════════ MAIN RESULT CARD ═══════════ -->
+    <div class="result-banner {% if prediction == 1 %}result-positive{% else %}result-negative{% endif %} anim-scale">
+      <div class="result-icon-wrap">
+        {% if prediction == 1 %}
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <circle cx="28" cy="28" r="26" stroke="currentColor" stroke-width="2.5"/>
+            <path d="M18 28l2 2 4 4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <path d="M28 18v20M18 28h20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        {% else %}
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <circle cx="28" cy="28" r="26" stroke="currentColor" stroke-width="2.5"/>
+            <path d="M18 28l6 6 14-14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        {% endif %}
+      </div>
+      <div class="result-text">
+        <h2>
+          {% if prediction == 1 %}
+            Appendicite suspectée
+          {% else %}
+            Pas d'appendicite
+          {% endif %}
+        </h2>
+        <p>
+          {% if prediction == 1 %}
+            Le modèle indique une <strong>forte probabilité</strong> d'appendicite. Une consultation chirurgicale est recommandée.
+          {% else %}
+            Le modèle n'identifie <strong>pas de signe</strong> d'appendicite aiguë. Réévaluation clinique si les symptômes persistent.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+
+    <!-- ═══════════ PROBABILITY CARDS ═══════════ -->
+    <div class="prob-grid">
+      <div class="prob-card prob-danger anim-up delay-1">
+        <div class="prob-header">
+          <span class="prob-label">Appendicite</span>
+          <span class="prob-value">{{ "%.1f"|format(appendicitis_prob * 100) }}%</span>
+        </div>
+        <div class="prob-bar-track">
+          <div class="prob-bar-fill prob-fill-danger" style="width:0%" data-width="{{ appendicitis_prob * 100 }}"></div>
+        </div>
+      </div>
+      <div class="prob-card prob-success anim-up delay-2">
+        <div class="prob-header">
+          <span class="prob-label">Sain</span>
+          <span class="prob-value">{{ "%.1f"|format(healthy_prob * 100) }}%</span>
+        </div>
+        <div class="prob-bar-track">
+          <div class="prob-bar-fill prob-fill-success" style="width:0%" data-width="{{ healthy_prob * 100 }}"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ CONFIDENCE GAUGE ═══════════ -->
+    <div class="gauge-card anim-up delay-2">
+      <h3>Indice de confiance</h3>
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 200 120" class="gauge-svg">
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#10b981"/>
+              <stop offset="50%" stop-color="#f59e0b"/>
+              <stop offset="100%" stop-color="#ef4444"/>
+            </linearGradient>
+          </defs>
+          <!-- Background arc -->
+          <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e2e8f0" stroke-width="14" stroke-linecap="round"/>
+          <!-- Value arc -->
+          <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round"
+                stroke-dasharray="251.3" stroke-dashoffset="251.3"
+                class="gauge-arc" data-value="{{ confidence * 100 }}"/>
+          <!-- Needle -->
+          <line x1="100" y1="100" x2="100" y2="30" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"
+                class="gauge-needle" data-angle="{{ confidence * 180 }}"/>
+          <circle cx="100" cy="100" r="6" fill="#1e293b"/>
+        </svg>
+        <div class="gauge-value">{{ "%.1f"|format(confidence * 100) }}%</div>
+      </div>
+      <p class="gauge-model">Modèle : <strong>{{ best_model }}</strong></p>
+    </div>
+
+    <!-- ═══════════ SHAP EXPLANATION ═══════════ -->
+    {% if shap_available %}
+    <div class="shap-card anim-up delay-3">
+      <div class="shap-header">
+        <h3>Facteurs d'influence (SHAP)</h3>
+        <p>Impact de chaque variable sur cette prédiction individuelle</p>
+      </div>
+      <div class="shap-img-wrap">
+        <img src="{{ url_for('static', filename='images/shap_prediction.png') }}" alt="SHAP Waterfall" class="shap-img">
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══════════ MODEL METRICS ═══════════ -->
+    <div class="metrics-card anim-up delay-3">
+      <h3>Métriques du modèle {{ best_model }}</h3>
+      <div class="metrics-grid">
+        <div class="metric-item">
+          <div class="metric-val">{{ "%.1f"|format(metrics.accuracy * 100) }}%</div>
+          <div class="metric-lbl">Accuracy</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-val">{{ "%.1f"|format(metrics.precision * 100) }}%</div>
+          <div class="metric-lbl">Precision</div>
+        </div>
+        <div class="metric-item metric-highlight">
+          <div class="metric-val">{{ "%.1f"|format(metrics.recall * 100) }}%</div>
+          <div class="metric-lbl">Recall ★</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-val">{{ "%.1f"|format(metrics.f1_score * 100) }}%</div>
+          <div class="metric-lbl">F1 Score</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-val">{{ "%.1f"|format(metrics.roc_auc * 100) }}%</div>
+          <div class="metric-lbl">ROC-AUC</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ EVALUATION PLOTS ═══════════ -->
+    <div class="eval-plots anim-up delay-3">
+      <div class="eval-plot-card">
+        <h4>Matrice de confusion</h4>
+        <img src="{{ url_for('static', filename='images/confusion_matrix.png') }}" alt="Confusion Matrix">
+      </div>
+      <div class="eval-plot-card">
+        <h4>Courbe ROC</h4>
+        <img src="{{ url_for('static', filename='images/roc_curve.png') }}" alt="ROC Curve">
+      </div>
+    </div>
+
+    <!-- ═══════════ ACTIONS ═══════════ -->
+    <div class="results-actions anim-up delay-3">
+      <a href="{{ url_for('diagnosis') }}" class="btn btn-primary btn-lg">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Nouveau diagnostic
+      </a>
+      <button onclick="window.print()" class="btn btn-ghost btn-lg">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="7" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V3h8v4" stroke="currentColor" stroke-width="1.5"/><path d="M6 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Imprimer le rapport
+      </button>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="results-disclaimer anim-up delay-3">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3M8 10.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <p>Ce résultat est fourni à titre indicatif. Il ne remplace en aucun cas un avis médical professionnel. Consultez un praticien pour toute décision clinique.</p>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Animate probability bars
+  document.querySelectorAll('.prob-bar-fill').forEach(bar => {
+    setTimeout(() => { bar.style.width = bar.dataset.width + '%'; }, 400);
+  });
+  // Animate gauge
+  const arc = document.querySelector('.gauge-arc');
+  if (arc) {
+    const val = parseFloat(arc.dataset.value) / 100;
+    const total = 251.3;
+    setTimeout(() => { arc.style.strokeDashoffset = total * (1 - val); }, 500);
+  }
+  const needle = document.querySelector('.gauge-needle');
+  if (needle) {
+    const angle = parseFloat(needle.dataset.angle) - 90;
+    setTimeout(() => { needle.style.transform = `rotate(${angle}deg)`; needle.style.transformOrigin = '100px 100px'; }, 600);
+  }
+});
+</script>
+{% endblock %}
