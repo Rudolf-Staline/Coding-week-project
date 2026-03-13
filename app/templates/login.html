@@ -17,7 +17,7 @@
                 <p>Accédez à votre espace diagnostic</p>
             </div>
 
-            <form method="POST" action="{{ url_for('login') }}" class="auth-form">
+            <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">
                 <div class="auth-field">
                     <label for="username">Nom d'utilisateur</label>
                     <div class="auth-input-wrap">
@@ -50,7 +50,7 @@
 
             <div class="auth-footer">
                 <p>Pas encore de compte ?
-                    <a href="{{ url_for('register') }}">Créer un compte</a>
+                    <a href="{{ url_for('auth.register') }}">Créer un compte</a>
                 </p>
             </div>
         </div>

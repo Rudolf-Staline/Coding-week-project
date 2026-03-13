@@ -16,7 +16,7 @@
                 <p>Rejoignez PediAppend pour accéder au diagnostic</p>
             </div>
 
-            <form method="POST" action="{{ url_for('register') }}" class="auth-form">
+            <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form">
                 <div class="auth-field">
                     <label for="username">Nom d'utilisateur</label>
                     <div class="auth-input-wrap">
@@ -53,7 +53,7 @@
 
             <div class="auth-footer">
                 <p>Déjà inscrit ?
-                    <a href="{{ url_for('login') }}">Se connecter</a>
+                    <a href="{{ url_for('auth.login') }}">Se connecter</a>
                 </p>
             </div>
         </div>
