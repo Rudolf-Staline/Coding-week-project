@@ -155,6 +155,20 @@ class TestSavedModel:
         m = data["models"][best]
         assert m["precision"] >= 0.80, f"Precision trop basse : {m['precision']}"
 
+    def test_f1_score_acceptable(self):
+        with open(os.path.join(MODELS_DIR, "metrics.json")) as f:
+            data = json.load(f)
+        best = data["best_model"]
+        m = data["models"][best]
+        assert m["f1_score"] >= 0.85, f"F1-score trop bas : {m['f1_score']}"
+
+    def test_metrics_json_has_all_models(self):
+        with open(os.path.join(MODELS_DIR, "metrics.json")) as f:
+            data = json.load(f)
+        known_models = get_models()
+        for name in known_models:
+            assert name in data["models"], f"Modèle absent de metrics.json : {name}"
+
     def test_batch_prediction(self, loaded_model):
         model, scaler, feature_names = loaded_model
         batch = np.random.randn(10, len(feature_names))
