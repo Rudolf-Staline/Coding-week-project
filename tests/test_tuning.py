@@ -64,6 +64,10 @@ class TestBuildModel:
             m = build_model(name, params)
             assert hasattr(m, "predict_proba"), f"{name} n'a pas predict_proba"
 
+    def test_unknown_model_raises(self):
+        with pytest.raises((ValueError, KeyError)):
+            build_model("ModeleInconnu", {})
+
 
                                                              
                                
@@ -189,6 +193,12 @@ class TestTuneAllModels:
             assert 0 <= m["recall"] <= 1
             assert 0 <= m["precision"] <= 1
             assert 0 <= m["roc_auc"] <= 1
+
+    def test_top3_is_list(self, mini_tune):
+        for name, data in mini_tune.items():
+            assert isinstance(data["top3"], list), (
+                f"top3 de {name} devrait être une liste"
+            )
 
 
                                                              

@@ -39,6 +39,10 @@ class TestLoadData:
         for col in expected:
             assert col in raw_df.columns, f"Colonne attendue manquante : {col}"
 
+    def test_diagnosis_values(self, raw_df):
+        unique_vals = set(raw_df["Diagnosis"].dropna().unique())
+        assert unique_vals.issubset({0, 1}), f"Valeurs inattendues dans Diagnosis : {unique_vals}"
+
 
                                                              
                              
@@ -67,13 +71,21 @@ class TestOptimizeMemory:
 
     def test_preserves_values(self, raw_df):
         df_opt = optimize_memory(raw_df)
-                                                                                                    
+
         for col in raw_df.select_dtypes(include=[np.number]).columns[:5]:
             np.testing.assert_allclose(
                 df_opt[col].values.astype(float),
                 raw_df[col].values.astype(float),
                 rtol=1e-3, atol=1e-5,
                 err_msg=f"Valeurs différentes dans {col}"
+            )
+
+    def test_dtype_after_optimize(self, raw_df):
+        df_opt = optimize_memory(raw_df)
+        for col in df_opt.select_dtypes(include=[np.number]).columns:
+            assert df_opt[col].dtype.itemsize <= raw_df[col].dtype.itemsize, (
+                f"{col} : dtype optimisé ({df_opt[col].dtype}) "
+                f"plus grand que l'original ({raw_df[col].dtype})"
             )
 
 
@@ -187,6 +199,11 @@ class TestCleanData:
     def test_bmi_preserved(self, clean_df):
         assert "BMI" in clean_df.columns
 
+    def test_wbc_crp_ratio_positive(self, clean_df):
+        assert (clean_df["WBC_CRP_Ratio"] >= 0).all(), (
+            "WBC_CRP_Ratio contient des valeurs négatives"
+        )
+
 
                                                              
                              
@@ -237,6 +254,12 @@ class TestPreprocessData:
         X_train, X_test, _, _, _, _ = preprocessed
         assert not np.isnan(X_train).any()
         assert not np.isnan(X_test).any()
+
+    def test_scaler_inverse_transform(self, preprocessed):
+        X_train, _, _, _, scaler, _ = preprocessed
+        X_back = scaler.inverse_transform(X_train)
+        assert X_back.shape == X_train.shape
+        assert not np.isnan(X_back).any()
 
 
 if __name__ == "__main__":

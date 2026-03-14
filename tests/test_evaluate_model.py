@@ -61,6 +61,14 @@ class TestEvaluateModel:
         _, _, y_prob = evaluate_model(model, X_test, y_test)
         assert all(0 <= p <= 1 for p in y_prob)
 
+    def test_roc_auc_above_baseline(self, preprocessed, loaded_model):
+        _, X_test, _, y_test, _, _ = preprocessed
+        model, _, _ = loaded_model
+        metrics, _, _ = evaluate_model(model, X_test, y_test)
+        assert metrics["roc_auc"] > 0.5, (
+            f"ROC-AUC ({metrics['roc_auc']:.3f}) pas meilleur qu'un classifieur aléatoire"
+        )
+
 
 class TestPlots:
 
@@ -94,6 +102,16 @@ class TestPlots:
             assert os.path.exists(os.path.join(tmpdir, "shap_summary_bar.png"))
             assert os.path.exists(os.path.join(tmpdir, "shap_beeswarm.png"))
             assert shap_values is not None
+
+    def test_shap_plots_file_sizes(self, preprocessed, loaded_model):
+        _, X_test, _, y_test, _, _ = preprocessed
+        model, _, feature_names = loaded_model
+        with tempfile.TemporaryDirectory() as tmpdir:
+            generate_shap_plots(model, X_test, feature_names, save_dir=tmpdir)
+            bar_size = os.path.getsize(os.path.join(tmpdir, "shap_summary_bar.png"))
+            bee_size = os.path.getsize(os.path.join(tmpdir, "shap_beeswarm.png"))
+            assert bar_size > 5_000, f"shap_summary_bar.png trop petit : {bar_size} octets"
+            assert bee_size > 5_000, f"shap_beeswarm.png trop petit : {bee_size} octets"
 
 
 if __name__ == "__main__":

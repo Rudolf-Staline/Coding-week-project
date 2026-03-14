@@ -19,7 +19,8 @@ from sklearn.metrics import (
 from lightgbm import LGBMClassifier
 from catboost import CatBoostClassifier
 
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 

@@ -109,20 +109,27 @@ def predict():
 
         shap_values = compute_shap_values(X_scaled, model, feature_names, explainer)
 
+        first_name   = form_data.get("patient_first_name", "").strip()
+        last_name    = form_data.get("patient_last_name", "").strip()
+        patient_name = f"{first_name} {last_name}".strip()
+
         # Store the prediction payload for user history and admin review.
         conn = get_db()
         cursor = conn.execute(
-            "INSERT INTO history (user_id, timestamp, age, sex, prediction, confidence, probability, form_data, patient_first_name, patient_last_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            """
+            INSERT INTO history (
+                user_id, timestamp, age, sex,
+                prediction, confidence, probability,
+                form_data, patient_first_name, patient_last_name
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
             (current_user.id,
              datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
              form_data.get("Age", ""),
              form_data.get("Sex", ""),
-             prediction,
-             confidence,
-             probability,
+             prediction, confidence, probability,
              json.dumps(form_data),
-             form_data.get("patient_first_name", "").strip(),
-             form_data.get("patient_last_name", "").strip())
+             first_name, last_name),
         )
         conn.commit()
         conn.close()
@@ -134,7 +141,7 @@ def predict():
                                confidence=confidence,
                                shap_values=shap_values,
                                form_data=form_data,
-                               patient_name=f"{form_data.get('patient_first_name','').strip()} {form_data.get('patient_last_name','').strip()}".strip())
+                               patient_name=patient_name)
     except Exception as e:
         logger.error("Prediction error: %s", e, exc_info=True)
         flash(f"Error: {e}", "error")

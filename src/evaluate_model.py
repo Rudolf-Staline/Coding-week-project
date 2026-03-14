@@ -27,9 +27,24 @@ from src.config import (
     SHAP_MAX_DISPLAY, SHAP_BG_SAMPLES, TREE_MODEL_TYPES,
 )
 
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
+
+
+def _normalise_shap(sv) -> np.ndarray:
+    """Return SHAP values for the positive class from any SHAP output format."""
+    if isinstance(sv, list):
+        return sv[1]
+    return sv
+
+
+def _scalar_base_value(expected_value) -> float:
+    """Extract a scalar base value from TreeExplainer.expected_value."""
+    if isinstance(expected_value, (list, np.ndarray)):
+        return float(expected_value[1]) if len(expected_value) > 1 else float(expected_value[0])
+    return float(expected_value)
 
 
 def load_model():
@@ -119,17 +134,12 @@ def generate_shap_plots(model, X_test, feature_names: list, save_dir: str = IMAG
     model_type = type(model).__name__
     if model_type in TREE_MODEL_TYPES:
         explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(X_test)
-        # For binary tasks SHAP may return one array per class.
-        if isinstance(shap_values, list):
-            shap_values = shap_values[1]
+        shap_values = _normalise_shap(explainer.shap_values(X_test))
     else:
                                 # Non-tree models fallback to KernelExplainer with a background sample.
         bg = shap.sample(X_test, min(SHAP_BG_SAMPLES, len(X_test)))
         explainer = shap.KernelExplainer(model.predict_proba, bg)
-        shap_values = explainer.shap_values(X_test[:100])
-        if isinstance(shap_values, list):
-            shap_values = shap_values[1]
+        shap_values = _normalise_shap(explainer.shap_values(X_test[:100]))
 
     # Use DataFrame to keep readable feature labels in SHAP charts.
     X_df = pd.DataFrame(X_test, columns=feature_names)
@@ -175,9 +185,6 @@ def generate_shap_plots(model, X_test, feature_names: list, save_dir: str = IMAG
 
 def generate_single_prediction_shap(model, scaler, feature_names, input_data: dict, save_path: str):
     """Generate one SHAP waterfall figure for a single patient prediction."""
-    import io
-    import base64
-
     # Align incoming payload to training feature order.
     df_input = pd.DataFrame([input_data])
     for col in feature_names:
@@ -189,22 +196,14 @@ def generate_single_prediction_shap(model, scaler, feature_names, input_data: di
     # Rebuild a local explainer for one-sample explanation.
     model_type = type(model).__name__
     if model_type in TREE_MODEL_TYPES:
-        explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(X_scaled)
-        if isinstance(shap_values, list):
-            shap_values = shap_values[1]
-        base_value = explainer.expected_value
-        if isinstance(base_value, (list, np.ndarray)):
-            base_value = base_value[1] if len(base_value) > 1 else base_value[0]
+        explainer   = shap.TreeExplainer(model)
+        shap_values = _normalise_shap(explainer.shap_values(X_scaled))
     else:
-        bg = shap.sample(X_scaled, 1)
-        explainer = shap.KernelExplainer(model.predict_proba, bg)
-        shap_values = explainer.shap_values(X_scaled)
-        if isinstance(shap_values, list):
-            shap_values = shap_values[1]
-        base_value = explainer.expected_value
-        if isinstance(base_value, (list, np.ndarray)):
-            base_value = base_value[1] if len(base_value) > 1 else base_value[0]
+        bg          = shap.sample(X_scaled, 1)
+        explainer   = shap.KernelExplainer(model.predict_proba, bg)
+        shap_values = _normalise_shap(explainer.shap_values(X_scaled))
+
+    base_value = _scalar_base_value(explainer.expected_value)
 
     explanation = shap.Explanation(
         values=shap_values[0],
