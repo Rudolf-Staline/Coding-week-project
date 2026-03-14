@@ -27,7 +27,8 @@ from src.config import (
     SHAP_MAX_DISPLAY, SHAP_BG_SAMPLES, TREE_MODEL_TYPES,
 )
 
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
