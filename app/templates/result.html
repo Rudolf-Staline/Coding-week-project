@@ -223,13 +223,15 @@
                 <div class="shap-rows">
                     {% set max_shap = shap_values[0].shap|abs if shap_values else 1 %}
                     {% for sv in shap_values %}
-                    <div class="shap-row">
+                    <div class="shap-row" title="{{ sv.feature }} | Valeur: {{ sv.value }} | SHAP: {{ '%+.4f'|format(sv.shap) }}">
                         <!-- Nom de la variable clinique -->
                         <div class="shap-feature">{{ sv.feature }}</div>
                         <!-- Barre de contribution (positive = verte, négative = rouge) -->
                         <div class="shap-track">
                             <div class="shap-fill {{ 'positive' if sv.shap >= 0 else 'negative' }}"
-                                 data-width="{{ ((sv.shap|abs / max_shap) * 100)|round|int }}"></div>
+                                 data-width="{{ ((sv.shap|abs / max_shap) * 100)|round|int }}"
+                                 role="img"
+                                 aria-label="{{ sv.feature }}. Valeur: {{ sv.value }}. SHAP: {{ '%+.4f'|format(sv.shap) }}"></div>
                         </div>
                         <!-- Valeur numérique SHAP avec signe (+/-) -->
                         <div class="shap-val {{ 'positive' if sv.shap >= 0 else 'negative' }}">{{ '%+.4f'|format(sv.shap) }}</div>
@@ -250,7 +252,7 @@
                         </div>
                         <!-- Liste des variables avec contribution SHAP positive -->
                         {% for sv in shap_values if sv.shap >= 0 %}
-                        <div class="shap-feature-item pos-item">
+                        <div class="shap-feature-item pos-item" title="{{ sv.feature }} | Valeur: {{ sv.value }} | SHAP: +{{ '%.4f'|format(sv.shap) }}">
                             <div class="shap-feature-item-inner">
                                 <div class="shap-feature-item-left">
                                     <div class="shap-feature-bar pos"></div>
@@ -275,7 +277,7 @@
                         </div>
                         <!-- Liste des variables avec contribution SHAP négative -->
                         {% for sv in shap_values if sv.shap < 0 %}
-                        <div class="shap-feature-item neg-item">
+                        <div class="shap-feature-item neg-item" title="{{ sv.feature }} | Valeur: {{ sv.value }} | SHAP: {{ '%.4f'|format(sv.shap) }}">
                             <div class="shap-feature-item-inner">
                                 <div class="shap-feature-item-left">
                                     <div class="shap-feature-bar neg"></div>

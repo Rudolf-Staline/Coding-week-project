@@ -1198,6 +1198,7 @@ input, select, textarea { font-family: inherit; }
   padding: 0.45rem 0.75rem;
   border-radius: var(--radius);
   transition: background 0.2s;
+  cursor: help;
 }
 .shap-row:hover { background: var(--slate-50); }
 .shap-feature {
