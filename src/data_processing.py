@@ -212,7 +212,7 @@ def _drop_correlated_features(df: pd.DataFrame,
 
     # Build a temporary numeric target to score feature usefulness.
     target_numeric = df[target_col].copy()
-    if target_numeric.dtype.name in ("object", "category"):
+    if not pd.api.types.is_numeric_dtype(target_numeric):
         target_numeric = target_numeric.astype(str).str.strip().str.lower()
         target_numeric = target_numeric.map(
             lambda v: 0 if "no" in v else (1 if "appendicitis" in v else np.nan)
@@ -220,7 +220,7 @@ def _drop_correlated_features(df: pd.DataFrame,
 
     # Compute correlation with target without mutating the original dataframe.
     df_for_corr = df[num_cols].copy()
-    df_for_corr[target_col] = target_numeric.values
+    df_for_corr[target_col] = pd.to_numeric(target_numeric, errors="coerce")
     # Greedy loop: drop one redundant column at a time.
     target_corr = df_for_corr.corr()[target_col].abs().drop(target_col)
 
