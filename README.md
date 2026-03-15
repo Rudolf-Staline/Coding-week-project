@@ -26,6 +26,7 @@
 - [Web Application](#web-application)
 - [Testing](#testing)
 - [Limitations & Future Work](#limitations--future-work)
+- [Prompt Engineering](#prompt-engineering)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -344,14 +345,14 @@ Coding-week-project/
 |       |-- history.html                 # Searchable/filterable prediction history
 |       `-- admin.html                   # Admin dashboard: user management
 |
-|-- catboost_info/
-|   `-- catboost_training.json           # CatBoost training metadata (auto-generated)
-|
 |-- data/
 |   |-- appendicitis.csv                 # Raw dataset (782 patients, 53 features)
 |   `-- processed/
 |       |-- X_processed.csv              # Preprocessed feature matrix (from EDA notebook)
 |       `-- y_processed.csv              # Preprocessed target labels (from EDA notebook)
+|
+|-- docs/
+|   `-- prompt_engineering.md            # Prompt engineering journal: prompts, results, lessons learned
 |
 |-- models/
 |   |-- best_model.pkl                   # Trained best model (Random Forest)
@@ -663,6 +664,12 @@ The CI runs on push to `main`, tags matching `v*`, and pull requests to `main`. 
 - API endpoint for programmatic access
 - Confidence interval estimation for predictions
 - Temporal validation (prospective study integration)
+
+---
+
+## Prompt Engineering
+
+This project was developed with AI coding agents (Claude, ChatGPT, GitHub Copilot). The full prompt engineering journal, including the prompts used at each phase, what the agents produced, and lessons learned, is available in [`docs/prompt_engineering.md`](docs/prompt_engineering.md).
 
 ---
 
