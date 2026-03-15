@@ -11,11 +11,12 @@
 
 ## Table of Contents
 
+- [Quick start](#quick-start)
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Dataset](#dataset)
 - [Modeling](#modeling)
-- [Installation & Usage](#installation--usage)
+- [Commands](#commands)
 - [Configuration](#configuration)
 - [Results](#results)
 - [Web Application](#web-application)
@@ -25,6 +26,27 @@
 - [Prompt Engineering](#prompt-engineering)
 - [Contributing](#contributing)
 - [License](#license)
+
+---
+
+## Quick start
+
+```bash
+git clone https://github.com/Mavens06/Coding-week-project.git
+cd Coding-week-project
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# Train the model (or skip -- pre-trained artifacts are in models/)
+python src/train_model.py
+
+# Launch the web app
+cd app && python app.py
+```
+
+The app is available at http://localhost:5000. Default admin credentials: `admin` / `admin123`.
+
+> **Documentation :** le journal de prompt engineering et les details de la methode de travail avec les agents IA sont dans [`docs/prompt_engineering.md`](docs/prompt_engineering.md).
 
 ---
 
@@ -122,20 +144,7 @@ SHAP explainability: `TreeExplainer` for tree models, `KernelExplainer` (50 back
 
 ---
 
-## Installation & Usage
-
-### Quick start
-
-```bash
-git clone https://github.com/Mavens06/Coding-week-project.git
-cd Coding-week-project
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Pre-trained model artifacts are included in `models/`, so you can skip training and go straight to the web app.
-
-### Commands
+## Commands
 
 | Command | Description |
 |---------|-------------|
@@ -145,15 +154,6 @@ Pre-trained model artifacts are included in `models/`, so you can skip training 
 | `python src/tuning.py` | Grid search across all 4 models (5-fold CV) |
 | `cd app && python app.py` | Launch the web app on http://localhost:5000 |
 | `pytest tests/ -v` | Run the test suite |
-
-### Default admin credentials
-
-| | |
-|--|--|
-| Username | `admin` |
-| Password | `admin123` |
-
-Auto-created on first launch. Change these in `app/config.py` for any non-local deployment.
 
 ---
 
