@@ -5,12 +5,13 @@
 [![CI Pipeline](https://github.com/Mavens06/Coding-week-project/actions/workflows/ci.yml/badge.svg)](https://github.com/Mavens06/Coding-week-project/actions)
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
-![Version](https://img.shields.io/badge/version-1.1.2-orange.svg)
+![Version](https://img.shields.io/badge/version-1.2.4-orange.svg)
 
 ---
 
 ## Table of Contents
 
+- [Quick Start](#quick-start)
 - [Overview](#overview)
 - [Architecture / Pipeline Diagram](#architecture--pipeline-diagram)
 - [Dataset](#dataset)
@@ -26,8 +27,35 @@
 - [Web Application](#web-application)
 - [Testing](#testing)
 - [Limitations & Future Work](#limitations--future-work)
+- [Prompt Engineering](#prompt-engineering)
 - [Contributing](#contributing)
 - [License](#license)
+
+---
+
+## Quick Start
+
+```bash
+git clone https://github.com/Mavens06/Coding-week-project.git
+cd Coding-week-project
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# Train the model (or skip -- pre-trained artifacts are in models/)
+python src/train_model.py
+
+# Launch the web app
+cd app && python app.py
+```
+
+The app is available at **http://localhost:5000**.
+
+| | |
+|--|--|
+| Default admin username | `admin` |
+| Default admin password | `admin123` |
+
+> **Documentation :** le journal de prompt engineering et les details de la methode de travail avec les agents IA sont dans [`docs/prompt_engineering.md`](docs/prompt_engineering.md).
 
 ---
 
@@ -315,10 +343,17 @@ Coding-week-project/
 |   |-- shap_utils.py                    # SHAP explainer init + per-prediction SHAP value computation
 |   |-- history.db                       # SQLite database (users + prediction history)
 |   |-- static/
-|   |   |-- css/style.css                # Global UI styles (landing, form, results, admin)
+|   |   |-- css/
+|   |   |   |-- core.css                # Base layout, typography, utilities
+|   |   |   |-- form.css               # Diagnosis form wizard styles
+|   |   |   |-- landing.css            # Landing page hero and sections
+|   |   |   |-- pages.css              # Login, register, history, admin, profile
+|   |   |   |-- result.css             # Prediction result page
+|   |   |   `-- style.css              # Global imports and shared variables
 |   |   |-- img/
 |   |   |   |-- anatomy-body.jpg
-|   |   |   `-- appendix-anatomy.svg
+|   |   |   |-- appendix-anatomy.svg
+|   |   |   `-- favicon.svg
 |   |   `-- js/
 |   |       |-- common.js                # Global UI (navbar, animations, flash)
 |   |       |-- landing.js               # Landing page slides + stats + particles
@@ -345,6 +380,9 @@ Coding-week-project/
 |   `-- processed/
 |       |-- X_processed.csv              # Preprocessed feature matrix (from EDA notebook)
 |       `-- y_processed.csv              # Preprocessed target labels (from EDA notebook)
+|
+|-- docs/
+|   `-- prompt_engineering.md            # Prompt engineering journal: prompts, results, lessons learned
 |
 |-- models/
 |   |-- best_model.pkl                   # Trained best model (Random Forest)
@@ -376,7 +414,7 @@ Coding-week-project/
 |       `-- shap_beeswarm.png
 |
 |-- src/                                 # ML pipeline source code
-|   |-- __init__.py                      # Package version: "1.1.2"
+|   |-- __init__.py                      # Package version: "1.2.4"
 |   |-- config.py                        # Central config: paths, ML defaults, cleaning thresholds
 |   |-- data_processing.py               # load, optimize, clean (9 steps), preprocess
 |   |-- train_model.py                   # Train 4 models, CV, select best, save artifacts
@@ -575,8 +613,7 @@ The Flask web application provides a clinical-grade interface:
 
 - Global JS: `app/static/js/common.js` (navbar scroll state, smooth scroll, entry animations, flash auto-dismiss)
 - Per-page JS: `landing.js`, `diagnosis.js`, `result.js`, `history.js`, `admin.js`
-- CSS: `app/static/css/style.css`
-- Template note: prefer Jinja comments `{# ... #}` for file headers / internal docs in templates (HTML comments can still be used for rendered markup, but avoid embedding Jinja tags inside them).
+- CSS (in `app/static/css/`): `style.css` (global imports), `core.css` (base layout), `landing.css`, `form.css`, `result.css`, `pages.css`
 
 ### Pages
 
@@ -660,6 +697,12 @@ The CI runs on push to `main`, tags matching `v*`, and pull requests to `main`. 
 
 ---
 
+## Prompt Engineering
+
+This project was developed with AI coding agents (Claude, ChatGPT, GitHub Copilot). The full prompt engineering journal, including the prompts used at each phase, what the agents produced, and lessons learned, is available in [`docs/prompt_engineering.md`](docs/prompt_engineering.md).
+
+---
+
 ## Contributing
 
 1. Fork the repository
@@ -685,4 +728,4 @@ License: MIT
 
 ---
 
-*Built by the PediAppend team -- Coding Week 2026*
+*Built by the team 35-- Coding Week 2026*
